@@ -11,7 +11,7 @@ from src.utils.graph_search_utils.astar_fibheap import AStar
 from src.utils.logger import Logger
 from src.generators.generator_superclass import GeneratorSuperclass
 from src.utils.math_utils import MathUtils
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 from src.utils.py_utils import PyUtils
 
 

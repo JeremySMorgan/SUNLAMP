@@ -16,7 +16,7 @@ from src.utils.geometry_objects._2d_triangle_geometry import SupportTriangle
 from src.motion.motion_utils import MotionUtils, Constraints
 from src.utils.logger import Logger as Lg
 from src.utils.math_utils import MathUtils
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 
 
 def end_config_exhaustive_search(

@@ -14,7 +14,7 @@ from src.generators.high_level_trajectory_generator import HighLevelTrajectoryPl
 from src.generators.scatter_list_generator import ScatterListGenerator
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 from src.utils.robot_poser import RobotPoser
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 from src.motion.control_loop import ControlLoop
 from src.utils.logger import Logger
 from src.utils.math_utils import MathUtils

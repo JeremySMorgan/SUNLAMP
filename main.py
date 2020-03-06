@@ -58,7 +58,6 @@ def main():
     # srunner.run(ignore_saved_cloop=True)
     # srunner.run(run_mplanner=False)
     # srunner.run(run_mplanner=False)
-    srunner.run(run_hltplanner=)
     # srunner.run(ignore_saved_splan=True)
     # srunner.run(only_mapping=True)
     # srunner.run()
@@ -138,19 +137,3 @@ def shutdown(u_input=None):
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-'''
-failed at: 143 (exhaustive search failed)
-
-ran succesfully in 2917.6363s (48 min) (think disable sleep wasn't working)
-
-Failed after 1513.82943s, at stance_idx:143 (plan_step())
-
-'''
-
-
-

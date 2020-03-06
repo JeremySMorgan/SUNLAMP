@@ -10,7 +10,7 @@ from src.utils.geometry_objects._2d_circle_geometry import LegRange
 from src.utils.geometry_objects._2d_triangle_geometry import SupportTriangle
 from shapely.geometry import Point
 from src.utils.math_utils import MathUtils
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 from src.utils.data_objects.height_map import HeightMap
 
 

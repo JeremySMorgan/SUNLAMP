@@ -1,6 +1,6 @@
 import pickle as pickle
 import time as picklerick
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 
 
 class FootstepSequence:

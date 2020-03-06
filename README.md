@@ -4,7 +4,7 @@ through obstacle filled environments, while ensuring the robot does not collisid
 robot is static stable throughout its motion. To achieve this, three separate planners of different abstraction levels 
 were designed and implemented - a high level trajectory planner, a step sequence planner, and a real time full body motion planner. 
 
-> See *'project report.md'* for a system writeup
+> See *'project_report.md'* for a system writeup
 
 
 #### Dependencies

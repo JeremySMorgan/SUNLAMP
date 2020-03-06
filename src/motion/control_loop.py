@@ -4,7 +4,7 @@ from src.utils.math_utils import MathUtils
 from .motion_planner import ConfigSpacePlanner
 from src.motion.motion_utils import MotionUtils
 from src.utils.data_objects.controlloop_output import ControlLoopOutput
-from src.utils.VisUtils import VisUtils
+from src.utils.vis_utils import VisUtils
 from src.utils.py_utils import PyUtils
 from src.motion.motion_planner import MPlannerResults
 from klampt import Simulator

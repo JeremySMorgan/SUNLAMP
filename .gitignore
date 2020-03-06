@@ -12,3 +12,6 @@ __pycache__/
 
 # object files
 *.pyc
+
+# test result pickles
+data/test_results/*.p
