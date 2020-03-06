@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<world>
+    <terrain translation="0 0 0" file="terrains/plane.tri"></terrain>
+    <rigidObject position="2.88792983763 2.27203732252 0" name="block">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.5237247094839551 0.6356346844414458 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject position="-0.181595158448 1.86638243691 0" name="block">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.68751896572709 0.7731081183939041 0.14173340523614691"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject position="-2.53086050616 0.375181405773 0" name="block">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.5958164715605705 0.577112102699584 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+</world>

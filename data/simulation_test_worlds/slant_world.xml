@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<world>
+    <terrain translation="0 0 0" file="terrains/plane.tri"></terrain>
+    <rigidObject rotateX="0.016817363509946795" position="0.164248744657 2.62939635633 0" rotateZ="0.15290149230420552" name="block" rotateY="0.11534074241382403">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.7024244627187607 0.8058084063362468 0.12015648709417714"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.0034828051246336795" position="2.55955730344 2.43628702139 0" rotateZ="-0.531121075515962" name="block" rotateY="0.2643496376213087">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.4394847951438359 0.7739006035828117 0.11383438159569773"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.010192568468513814" position="2.29453352073 1.99307447389 0" rotateZ="0.23616443466167256" name="block" rotateY="0.13276582541348111">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.7816977173162731 0.33954684135086216 0.10926059263511108"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="0.003573675154843599" position="2.96418849399 0.486479525973 0" rotateZ="-0.5449709042466343" name="block" rotateY="0.15618496663226766">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.5550562224679465 0.9018541237872654 0.1160619800005712"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="0.01273434707503256" position="-0.596150134582 1.44954979859 0" rotateZ="0.6691336243189222" name="block" rotateY="0.11763883481523581">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.7460494041617152 0.5801402938856521 0.11452381433051308"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.0029328952571709833" position="1.98418599919 -0.210037356317 0" rotateZ="-0.08369981689718137" name="block" rotateY="0.13799559302163292">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.664613675013356 0.9767776482182093 0.1252654250971718"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="0.0047550979671325344" position="-3.26162660534 1.56328546977 0" rotateZ="-0.304859404174174" name="block" rotateY="0.062020278939444805">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.8333980848662356 0.8308007831936707 0.09457955245417096"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.004255434636243234" position="-1.51983324278 0.661224358885 0" rotateZ="-0.10899198601261309" name="block" rotateY="0.08393748462878597">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.6883703671434108 0.8605504576315756 0.20483018554779203"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.002404141459216918" position="-2.49121603376 0.542424825078 0" rotateZ="-0.3772140982273921" name="block" rotateY="0.19026179156784395">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.3087539507645121 0.39591534398611417 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.0012164485632939475" position="-1.08642779124 0.355042111719 0" rotateZ="0.8518576439722626" name="block" rotateY="0.026970753034167905">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.7394362324974808 0.46738536626749727 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="0.003038079804468234" position="1.05673724537 1.98826475258 0" rotateZ="0.20001750410069727" name="block" rotateY="0.053020278187210564">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.5098134477265402 0.18012264279219825 0.06776202949486605"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.0024485037745780964" position="-1.63528460475 -0.00760504938544 0" rotateZ="0.26576229955526803" name="block" rotateY="-0.03086756124804041">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.4771290138281061 0.5167060210894693 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="0.004408739852227639" position="-4.77990123381 2.53142853755 0" rotateZ="-0.5546683233309007" name="block" rotateY="0.17659383974021106">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.8321892751571642 0.991684830175178 0.31917575776859486"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+    <rigidObject rotateX="-0.015031142711129807" position="-0.49813380082 2.02971582072 0" rotateZ="-0.1619773425773771" name="block" rotateY="-0.07233318328802513">
+        <geometry translation="0 0 0" mesh="objects/cube.off" scale="0.5756097548803529 0.5975698848331255 0.05"></geometry>
+        <physics kFriction="0.0" kRestitution="0.0" automass="1" kStiffness="10000.00" mass="1.0" kDamping="100.00"></physics>
+    </rigidObject>
+</world>

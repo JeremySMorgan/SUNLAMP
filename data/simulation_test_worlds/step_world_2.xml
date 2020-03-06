@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- test of siding on low-friction surfaces with different meshing resolutions- high resolutions lead to some extra friction artifacts -->
+<world>
+  <terrain file="terrains/plane.tri"  translation="3.5 0 0" />
+
+  <rigidObject name="block"  position="1.20 .15 0.0530000">
+     <geometry mesh="objects/cube.off" scale="4.250000 3.50000 0.125" translation="-0.050000 -0.050000 -0.050000" />
+     <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+  </rigidObject>
+
+    <rigidObject name="block"  position="2.1 -.15 0.0530000">
+     <geometry mesh="objects/cube.off" scale="2.250000 3.50000 0.1" translation="-0.050000 -0.050000 -0.050000" />
+     <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+  </rigidObject>
+
+    <rigidObject name="block"  position="2.76 1.5 0.0430000">
+     <geometry mesh="objects/cube.off" scale=".750000 .50000 0.2000" translation="-0.050000 -0.050000 -0.050000" />
+     <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+  </rigidObject>
+
+        <rigidObject name="block"  position="3.66 .45 0.0430000">
+     <geometry mesh="objects/cube.off" rotateZ=".57" scale=".50000 .50000 0.35000" translation="-0.050000 -0.050000 -0.050000" />
+     <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+  </rigidObject>
+
+    <rigidObject name="block"  position="3.2 2.25 0.0430000">
+     <geometry mesh="objects/cube.off" scale=".250000 .750000 0.30000" translation="-0.050000 -0.050000 -0.050000" />
+     <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+  </rigidObject>
+
+  <simulation>
+    <globals />
+    <object index="0">
+       <geometry kRestitution="0.000000" kFriction="0.010000" kStiffness="10000.000000" kDamping="100.000000" padding="0.002000"/>
+       <velocity linear="1 0 0"/>
+    </object>
+    <object index="1">
+       <geometry kRestitution="0.000000" kFriction="0.010000" kStiffness="10000.000000" kDamping="100.000000" padding="0.002000"/>
+       <velocity linear="1 0 0"/>
+    </object>
+  </simulation>
+</world>
+

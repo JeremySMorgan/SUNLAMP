@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<world>
+
+    <terrain file="terrains/drc_rough_terrain.off"  translation="0 0 0" />
+
+        <rigidObject name="block"  position="1.25 2.75 0.0530000">
+         <geometry mesh="objects/cube.off" scale="0.1 0.1 0.1" translation="-0.05 -0.05 -0.05" />
+         <physics mass="1.000000" automass="1" kRestitution="0.000000" kFriction="0.0" kStiffness="10000.000000" kDamping="100.000000" />
+      </rigidObject>
+
+  <simulation>
+    <globals />
+    <object index="0">
+       <geometry kRestitution="0.000000" kFriction="0.010000" kStiffness="10000.000000" kDamping="100.000000" padding="0.002000"/>
+       <velocity linear="1 0 0"/>
+    </object>
+    <object index="1">
+       <geometry kRestitution="0.000000" kFriction="0.010000" kStiffness="10000.000000" kDamping="100.000000" padding="0.002000"/>
+       <velocity linear="1 0 0"/>
+    </object>
+  </simulation>
+</world>
+

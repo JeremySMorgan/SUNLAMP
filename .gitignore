@@ -1,0 +1,14 @@
+
+# robot model - not public
+data/robot_model/robosimian_caesar_new.rob
+data/robot_model/stl_0_3/*.obj
+data/robot_model/stl_0_3/*.stl
+data/robot_model/stl_0_3/*.off
+
+# venv
+venv/
+__pycache__/
+.idea/
+
+# object files
+*.pyc
