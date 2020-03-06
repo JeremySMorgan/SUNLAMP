@@ -8,7 +8,7 @@ from scripts.world_builder import WorldBuilder
 from src.system_runner import SystemRunner
 from src.utils.logger import Logger
 from src.lidar.pcloud_parser import PCloudParser
-from src.utils.project_constants import ProjectConstants
+from src.utils import project_constants
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 
 

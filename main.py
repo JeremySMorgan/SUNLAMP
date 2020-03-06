@@ -6,7 +6,7 @@ from scripts.world_builder import WorldBuilder
 from src.system_runner import SystemRunner
 from src.utils.logger import Logger
 from src.lidar.pcloud_parser import PCloudParser
-from src.utils.project_constants import ProjectConstants
+from src.utils import project_constants
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 
 
@@ -33,7 +33,7 @@ def main():
     x_range = [-5, 5, .015]
     y_range = [-.25, 3, .015]
     robot_q0 = [-4.25, 1, 0]
-    robot_qf = [3.75, 1, 0]
+    robot_qf = [-2.75, 1, 0]
     world_name = "flatworld"
 
     # world_name = "very_hectic_world"
@@ -43,7 +43,7 @@ def main():
     # robot_qf = [4, .5, 0]
 
     cloop_run_name = ""
-    visualize = True
+    visualize = False
     execution_world_enabled = True
 
     srunner = SystemRunner()
@@ -52,8 +52,10 @@ def main():
         visualize=visualize,
         cloop_run_name=cloop_run_name
     )
-    srunner.run()
-    srunner.save_all()
+    # srunner.run()
+    # srunner.save_all()
+
+    srunner.visualize()
 
     # srunner.run(ignore_saved_cloop=True)
     # srunner.run(run_mplanner=False)

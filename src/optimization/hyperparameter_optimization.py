@@ -6,7 +6,7 @@ from src import system_runner
 from src.utils.data_objects.optimization_output import OptimizationResults
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 from src.utils.logger import Logger
-from src.utils.project_constants import ProjectConstants
+from src.utils import project_constants
 
 
 class HyperparameterOptimizer:
@@ -28,8 +28,7 @@ class HyperparameterOptimizer:
 
         def paremeter_vector_cost(x):
 
-            project_constants = ProjectConstants()
-            tsuite = system_runner(x_vars, y_vars, xy_yaw0, xy_yawf, world_name, ProjectConstants=project_constants)
+            tsuite = system_runner(x_vars, y_vars, xy_yaw0, xy_yawf, world_name)
             tsuite.run()
             results = tsuite.get_results()
 

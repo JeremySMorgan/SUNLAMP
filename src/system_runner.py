@@ -5,7 +5,7 @@ import pickle as pickle
 import time
 import os
 import sys
-from src.utils.project_constants import ProjectConstants
+from src.utils import project_constants
 from src.generators.footstep_costmap_generator import FootstepCostMapGenerator
 from src.generators.conv_costmap_generator import ConvolutionCostMapGenerator
 from src.generators.step_sequence_planner import  StepSequencePlanner
@@ -72,9 +72,7 @@ class SystemRunner:
     fs_seq_type = "_fs_seq_type"
     control_loop_type = "_control_loop_config_outputs"
 
-    def __init__(self, project_constants=ProjectConstants()):
-
-        self.ProjectConstants = project_constants
+    def __init__(self):
 
         self.HM_X_START = None
         self.HM_X_END = None
@@ -90,7 +88,7 @@ class SystemRunner:
 
         self.results = SystemRunnerResults()
         self.results.world_name = None
-        self.results.project_constants = self.ProjectConstants
+        self.results.project_constants = project_constants
 
         self.planning_world = WorldModel()
         self.rposer = None
@@ -152,7 +150,7 @@ class SystemRunner:
         if not self.planning_world.readFile(SystemRunner.robot_file):
             raise RuntimeError("Unable to load robot model")
 
-        q = self.ProjectConstants.NOMINAL_CONFIG
+        q = project_constants.NOMINAL_CONFIG
         q[0] = self.xy_yaw0[0]
         q[1] = self.xy_yaw0[1]
         q[5] = self.xy_yaw0[2]
@@ -201,8 +199,8 @@ class SystemRunner:
         self.HM_X_END = inbound_xrange[1]
         self.HM_Y_START = inbound_yrange[0]
         self.HM_Y_END = inbound_yrange[1]
-        self.ProjectConstants.HM_Y_GRANULARITY = y_vars[2]
-        self.ProjectConstants.HM_X_GRANULARITY = x_vars[2]
+        project_constants.HM_Y_GRANULARITY = y_vars[2]
+        project_constants.HM_X_GRANULARITY = x_vars[2]
 
         self.hm_obj = self.get_saved_object(self.hm_type)
         if self.hm_obj is None:
@@ -216,7 +214,7 @@ class SystemRunner:
             )
 
             pcloud_parser.add_hm_to_klampt_vis(self.pcloud_fname)
-            q = self.ProjectConstants.NOMINAL_CONFIG
+            q = project_constants.NOMINAL_CONFIG
             q[0] = self.xy_yaw0[0]
             q[1] = self.xy_yaw0[1]
             q[2] = self.xy_yaw0[2]
@@ -250,7 +248,7 @@ class SystemRunner:
         if self.gradient_map_obj is None:
             Logger.log("Gradient map is not build, exiting", "FAIL")
 
-        cmap_generator = FootstepCostMapGenerator(self.ProjectConstants, self.hm_obj, self.gradient_map_obj)
+        cmap_generator = FootstepCostMapGenerator(self.hm_obj, self.gradient_map_obj)
 
         fs_cost_map_runtime = cmap_generator.build_costmap(
             debug=debug, exlude_slope=exlude_slope, exlude_roughness=exlude_roughness, exlude_step=exlude_step
@@ -270,7 +268,7 @@ class SystemRunner:
         if self.hm_obj is not None:
             Logger.log("Warning: height map is already built and loaded", "WARNING")
 
-        hm_generator = HeightMapGenerator(self.ProjectConstants, self.planning_world, self)
+        hm_generator = HeightMapGenerator(self.planning_world, [self.HM_X_START, self.HM_X_END], [self.HM_Y_START, self.HM_Y_END])
         hm_runtime = hm_generator.build_height_map()
         self.hm_obj = hm_generator.return_height_map()
         msg = "Built height map in " + str(Logger.pp_double(hm_runtime)) + "s"
@@ -300,7 +298,7 @@ class SystemRunner:
             Logger.log("Cost map is not build, exiting", "FAIL")
             return
 
-        convmap_gen = ConvolutionCostMapGenerator(self.ProjectConstants, self.fs_cost_map_obj)
+        convmap_gen = ConvolutionCostMapGenerator(self.fs_cost_map_obj)
         build_t = convmap_gen.build_conv_arr()
         convmap_gen.normalize_cost_arr()
 
@@ -330,8 +328,8 @@ class SystemRunner:
         if cost_map is None:
             Logger.log("cost map does not exist. Exiting", "FAIL"); return None
 
-        rposer = RobotPoser(self.ProjectConstants, self.planning_world, hm, fs_scatter=fs_scatter)
-        return StepSequencePlannerTester(self.ProjectConstants, hm, fs_scatter, hl_traj, cost_map, self.xy_yaw0, self.xy_yawf, rposer)
+        rposer = RobotPoser(self.planning_world, hm, fs_scatter=fs_scatter)
+        return StepSequencePlannerTester( hm, fs_scatter, hl_traj, cost_map, self.xy_yaw0, self.xy_yawf, rposer)
 
     def get_hl_traj(self):
         if self.hl_traj_obj is None:
@@ -467,7 +465,7 @@ class SystemRunner:
         cost_map = self.fs_cost_map_obj
 
         # fs conv. cost Map
-        if self.ProjectConstants.USE_CONVMAP or conv_override:
+        if project_constants.USE_CONVMAP or conv_override:
             if self.fs_convcostmap_obj is None:
                 self.fs_convcostmap_obj = self.get_saved_object(SystemRunner.fs_convcostmap_type, print_loaded=False, print_dne=False)
             if self.fs_convcostmap_obj is None:
@@ -488,7 +486,7 @@ class SystemRunner:
                 fs_scatter_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
             if self.fs_scatter_obj is None:
                 Logger.log("Building Footstep Scatter", "")
-                scatter_generator = ScatterListGenerator(self.ProjectConstants, self.hm_obj, cost_map, self.xy_yaw0)
+                scatter_generator = ScatterListGenerator( self.hm_obj, cost_map, self.xy_yaw0)
                 fs_scatter_runtime = scatter_generator.build_list()
                 self.fs_scatter_obj = scatter_generator.return_scatter()
             self.results.fs_scatter_runtime = fs_scatter_runtime
@@ -496,15 +494,14 @@ class SystemRunner:
         if run_hltplanner and not only_mapping:
 
             # robot poser
-            self.rposer = RobotPoser(self.ProjectConstants, self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
+            self.rposer = RobotPoser( self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
 
             if self.hl_traj_obj is None:
                 self.hl_traj_obj = self.get_saved_object(SystemRunner.hl_traj_type, print_loaded=False, print_dne=False)
 
             if self.hl_traj_obj is None:
                 Logger.log("Building HL Trajectory", "")
-                hl_trajectory_generator = HighLevelTrajectoryPlanner(
-                    self.ProjectConstants, self.hm_obj, cost_map, self.xy_yaw0, self.xy_yawf,
+                hl_trajectory_generator = HighLevelTrajectoryPlanner(self.hm_obj, cost_map, self.xy_yaw0, self.xy_yawf,
                     debug=self.settings[SystemRunner.hl_traj_debug],
                     vis_succ=self.settings[SystemRunner.hl_traj_vis_successor],  rposer=self.rposer)
 
@@ -540,16 +537,14 @@ class SystemRunner:
                     if self.fs_seq_obj is None or ignore_saved_splan:
                         Logger.log("Building FS Sequence", "")
                         if self.vis_window_id is not None:
-                            fstep_seq_generator = StepSequencePlanner(
-                                self.ProjectConstants, self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
+                            fstep_seq_generator = StepSequencePlanner(self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
                                 self.xy_yaw0, self.xy_yawf,
                                 debug=self.settings[SystemRunner.stepseq_debug],
                                 vis_successors=self.settings[SystemRunner.stepseq_vis_successor],
                                 deep_debug_visualization=self.settings[SystemRunner.stepseq_vis_detailed],
                                 r_poser=self.rposer)
                         else:
-                            fstep_seq_generator = StepSequencePlanner(
-                                self.ProjectConstants, self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
+                            fstep_seq_generator = StepSequencePlanner(self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
                                 self.xy_yaw0, self.xy_yawf,
                                 debug=self.settings[SystemRunner.stepseq_debug],
                                 vis_successors=False, deep_debug_visualization=False,
@@ -585,8 +580,7 @@ class SystemRunner:
                                 visualize = self.vis_window_id is not None and self.settings[SystemRunner.control_loop_visualization_enabled]
 
                                 self.active_control_loop = ControlLoop(
-                                    self.ProjectConstants, self.planning_world, self.fs_scatter_obj, self.fs_seq_obj,
-                                    self.hm_obj, self.gradient_map_obj,
+                                    self.planning_world, self.fs_scatter_obj, self.fs_seq_obj, self.hm_obj, self.gradient_map_obj,
                                     physics_sim_enabled = self.physics_sim_enabled,
                                     execution_world_vis_id= self.execution_world_window_id,
                                     execution_world=self.execution_world,
@@ -786,8 +780,8 @@ class SystemRunner:
                     Logger.log("Error: trajectory doesn't exist", "FAIL")
                     return
 
-                base_config = self.ProjectConstants.NOMINAL_CONFIG[:]
-                base_config[2] = self.ProjectConstants.TORSO_Z_DESIRED
+                base_config = project_constants.NOMINAL_CONFIG[:]
+                base_config[2] = project_constants.TORSO_Z_DESIRED
 
                 start_config = base_config
                 start_config[0] = self.hl_traj_obj.xy_yaw0[0]
@@ -831,7 +825,7 @@ class SystemRunner:
                 run_fsviz = True
                 if self.rposer is None:
                     if self.hm_obj is not None and self.fs_scatter_obj is not None and self.planning_world is not None:
-                        self.rposer = RobotPoser(self.ProjectConstants, self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
+                        self.rposer = RobotPoser( self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
                         run_fsviz = True
                     else:
                         run_fsviz = False
@@ -910,51 +904,51 @@ class SystemRunner:
 
     def get_hash(self, obj_type):
 
-        hm_vars = self.HM_X_START + self.HM_X_END + self.ProjectConstants.HM_X_GRANULARITY + self.HM_Y_START + \
-                    self.HM_Y_END + self.ProjectConstants.HM_Y_GRANULARITY
+        hm_vars = self.HM_X_START + self.HM_X_END + project_constants.HM_X_GRANULARITY + self.HM_Y_START + \
+                    self.HM_Y_END + project_constants.HM_Y_GRANULARITY
 
         start_end_vars = .23*self.xy_yaw0[0] + .93*self.xy_yaw0[2] + .9323*self.xy_yaw0[1] + 1.0323*self.xy_yawf[0] + \
                          1.0323*self.xy_yawf[1] + self.xy_yawf[2]**2
 
-        hl_traj_vars = self.ProjectConstants.HLTRAJ_G_WEIGHT + self.ProjectConstants.HLTRAJ_H_WEIGHT +\
-            self.ProjectConstants.HLTRAJ_YAW_OFFSET + self.ProjectConstants.HLTRAJ_DELTAX +\
-            self.ProjectConstants.HLTRAJ_DELTAY + self.ProjectConstants.SEARCH_SPACE_X_MARGIN + \
-            self.ProjectConstants.SEARCH_SPACE_Y_MARGIN + start_end_vars + \
-            12.23*self.ProjectConstants.BASE_STATE_END_EFF_DX_FROM_TORSO + \
-            self.ProjectConstants.BASE_STATE_END_EFF_DY_FROM_TORSO**2
+        hl_traj_vars = project_constants.HLTRAJ_G_WEIGHT + project_constants.HLTRAJ_H_WEIGHT +\
+            project_constants.HLTRAJ_YAW_OFFSET + project_constants.HLTRAJ_DELTAX +\
+            project_constants.HLTRAJ_DELTAY + project_constants.SEARCH_SPACE_X_MARGIN + \
+            project_constants.SEARCH_SPACE_Y_MARGIN + start_end_vars + \
+            12.23*project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO + \
+            project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO**2
 
-        fs_seq_vars = self.ProjectConstants.STEPSEQ_G_WEIGHT + self.ProjectConstants.STEPSEQ_H_WEIGHT + \
-            self.ProjectConstants.STEPSEQ_TRANSLATION_DISTANCE + self.ProjectConstants.STEP_ORDER[0] - \
-            self.ProjectConstants.STEP_ORDER[3] + self.ProjectConstants.STEPSEQ_IDEAL_LOCATION_COST_COEFF + \
-            self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST + \
-            self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
-            start_end_vars + self.ProjectConstants.X_STEP_SIZE_FS_SCATTER + self.ProjectConstants.Y_STEP_SIZE_FS_SCATTER + \
-            self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS + \
-            self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
-            self.ProjectConstants.HOOK_LENGTH + self.ProjectConstants.HOOK_DIST_TO_GROUND + \
-            self.ProjectConstants.STEPSEQ_HOOK_SAFETY_MARGIN + \
-            self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
-            self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
-            self.ProjectConstants.STEPSEQ_ZERO_COST_RADIUS**2 * 3 + \
-            self.ProjectConstants.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * .83 + \
-            self.ProjectConstants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS + self.ProjectConstants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
+        fs_seq_vars = project_constants.STEPSEQ_G_WEIGHT + project_constants.STEPSEQ_H_WEIGHT + \
+            project_constants.STEPSEQ_TRANSLATION_DISTANCE + project_constants.STEP_ORDER[0] - \
+            project_constants.STEP_ORDER[3] + project_constants.STEPSEQ_IDEAL_LOCATION_COST_COEFF + \
+            project_constants.STEPSEQ_MAX_DIAGNOL_DIST + \
+            project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
+            start_end_vars + project_constants.X_STEP_SIZE_FS_SCATTER + project_constants.Y_STEP_SIZE_FS_SCATTER + \
+            project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS + \
+            project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
+            project_constants.HOOK_LENGTH + project_constants.HOOK_DIST_TO_GROUND + \
+            project_constants.STEPSEQ_HOOK_SAFETY_MARGIN + \
+            project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
+            project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
+            project_constants.STEPSEQ_ZERO_COST_RADIUS**2 * 3 + \
+            project_constants.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * .83 + \
+            project_constants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS + project_constants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
 
-        cmap_vars = self.ProjectConstants.CMAP_STEP_SIZEX + self.ProjectConstants.CMAP_STEP_SIZEY + \
-            self.ProjectConstants.CMAP_NORMALIZED_MAX_VALUE + self.ProjectConstants.CMAP_SLOPE_HEURISTIC_COEFF + \
-            self.ProjectConstants.CMAP_ROUGHNESS_HEURISTIC_COEFF + self.ProjectConstants.CMAP_MAX_NONPENALIZED_SLOPE + \
-            self.ProjectConstants.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE + \
-            self.ProjectConstants.END_AFFECTOR_RADIUS + self.ProjectConstants.COST_MAP_SEARCH_MARGIN_WIDTH +\
-            self.ProjectConstants.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF + self.ProjectConstants.CMAP_STEP_COSTFN_SEARCH_SIZE +\
-            self.ProjectConstants.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF + self.ProjectConstants.CMAP_STEP_COSTFN_BASELINE_COST
+        cmap_vars = project_constants.CMAP_STEP_SIZEX + project_constants.CMAP_STEP_SIZEY + \
+            project_constants.CMAP_NORMALIZED_MAX_VALUE + project_constants.CMAP_SLOPE_HEURISTIC_COEFF + \
+            project_constants.CMAP_ROUGHNESS_HEURISTIC_COEFF + project_constants.CMAP_MAX_NONPENALIZED_SLOPE + \
+            project_constants.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE + \
+            project_constants.END_AFFECTOR_RADIUS + project_constants.COST_MAP_SEARCH_MARGIN_WIDTH +\
+            project_constants.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF + project_constants.CMAP_STEP_COSTFN_SEARCH_SIZE +\
+            project_constants.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF + project_constants.CMAP_STEP_COSTFN_BASELINE_COST
 
-        if self.ProjectConstants.USE_CONVMAP:
+        if project_constants.USE_CONVMAP:
             fs_seq_vars += .1866
 
         if obj_type == SystemRunner.hm_type:
             hash_input = hm_vars
 
         elif obj_type == SystemRunner.fs_convcostmap_type:
-            hash_input = cmap_vars + self.ProjectConstants.CONV_X_WIDTH + self.ProjectConstants.CONV_Y_WIDTH
+            hash_input = cmap_vars + project_constants.CONV_X_WIDTH + project_constants.CONV_Y_WIDTH
 
         elif obj_type == SystemRunner.fs_costmap_type:
             hash_input = hm_vars + cmap_vars
@@ -966,15 +960,15 @@ class SystemRunner:
             hash_input = hm_vars + hl_traj_vars
 
         elif obj_type == SystemRunner.fs_scatter_type:
-            hash_input = hm_vars + start_end_vars + self.ProjectConstants.X_STEP_SIZE_FS_SCATTER +\
-                         self.ProjectConstants.Y_STEP_SIZE_FS_SCATTER
+            hash_input = hm_vars + start_end_vars + project_constants.X_STEP_SIZE_FS_SCATTER +\
+                         project_constants.Y_STEP_SIZE_FS_SCATTER
 
         elif obj_type == SystemRunner.fs_seq_type:
             hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars
 
         elif obj_type == SystemRunner.control_loop_type:
-            hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars + self.ProjectConstants.END_RANGE_MULTIPLIER +\
-            self.ProjectConstants.TORSO_Z_DESIRED
+            hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars + project_constants.END_RANGE_MULTIPLIER +\
+            project_constants.TORSO_Z_DESIRED
             if self.cloop_run_name:
                 for letter in self.cloop_run_name:
                     hash_input += ord(letter)

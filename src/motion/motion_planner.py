@@ -17,6 +17,7 @@ from src.motion.motion_utils import MotionUtils, Constraints
 from src.utils.logger import Logger as Lg
 from src.utils.math_utils import MathUtils
 from src.utils.vis_utils import VisUtils
+from src.utils import project_constants
 
 
 def end_config_exhaustive_search(
@@ -157,10 +158,9 @@ class MPlannerResults:
 
 class EndConfigGenerator(MotionUtils):
 
-    def __init__(self, ProjectConstants, world, fs_scatter_obj, fs_seq, height_map, gradient_map):
+    def __init__(self, world, fs_scatter_obj, fs_seq, height_map, gradient_map):
 
-        MotionUtils.__init__(
-            self, ProjectConstants, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(), gradient_map)
+        MotionUtils.__init__(self, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(), gradient_map)
         
 
 
@@ -186,10 +186,10 @@ class ConfigSpacePlanner(MotionUtils):
     leg3_j1_limits = (-1.8, 2.1)  # j15
     leg4_j1_limits = (-2.1, 1.8)  # j23
 
-    def __init__(self, ProjectConstants, world, fs_scatter_obj, fs_seq, height_map, gradient_map, u_input=None, lidar_mode=False):
+    def __init__(self, world, fs_scatter_obj, fs_seq, height_map, gradient_map, u_input=None, lidar_mode=False):
 
         MotionUtils.__init__(
-            self, ProjectConstants, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(),
+            self, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(),
             gradient_map, u_input=u_input, lidar_mode=lidar_mode)
 
         self.collider = WorldCollider(self.world)
@@ -286,7 +286,7 @@ class ConfigSpacePlanner(MotionUtils):
         range_circles = constraint_obj.get_range_circles()
         support_tri: SupportTriangle = constraint_obj.get_support_triangles()[0]
         torso_x_est, torso_y_est, yaw_rads_est_at_q = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[stance_idx])
-        nominal_q_joint_angles = self.ProjectConstants.NOMINAL_CONFIG[6:]
+        nominal_q_joint_angles = project_constants.NOMINAL_CONFIG[6:]
         support_tri_incenter_xy = [support_tri.incenterx, support_tri.incentery]
         visitems_to_clear = []
 
@@ -302,7 +302,7 @@ class ConfigSpacePlanner(MotionUtils):
 
         end_config_iktargets = [fl_obj, fr_obj, bl_obj, br_obj]
 
-        nominal_config_cp = self.ProjectConstants.NOMINAL_CONFIG[:]
+        nominal_config_cp = project_constants.NOMINAL_CONFIG[:]
         nominal_config_cp[0], nominal_config_cp[1] = torso_x_est, torso_y_est
         nominal_config_cp[5] = yaw_rads_est_at_q
 
@@ -616,7 +616,7 @@ class ConfigSpacePlanner(MotionUtils):
                 # end_config_iktargets += [torso_obj]
                 # if not res or not q_valid:
                 #     self.robosimian.setConfig(bias_config)
-                #     res = ik.solve(end_config_iktargets, activeDofs=self.ProjectConstants.ACTIVE_DOFS)
+                #     res = ik.solve(end_config_iktargets, activeDofs=project_constants.ACTIVE_DOFS)
                 #     q = self.robosimian.getConfig()
                 #     q_valid = config_valid(q, debug=False)
                 #     # if debug:
@@ -632,7 +632,7 @@ class ConfigSpacePlanner(MotionUtils):
                 # if not res or not q_valid:
                 #     dev = .5
                 #     self.robosimian.setConfig(bias_config)
-                #     res = ik.solve_nearby(end_config_iktargets, dev, activeDofs=self.ProjectConstants.ACTIVE_DOFS)
+                #     res = ik.solve_nearby(end_config_iktargets, dev, activeDofs=project_constants.ACTIVE_DOFS)
                 #     q = self.robosimian.getConfig()
                 #     q_valid = config_valid(q, debug=False)
                 #
@@ -680,7 +680,7 @@ class ConfigSpacePlanner(MotionUtils):
                     VisUtils.visualize_xy_point(lowest_cost_config, f"grid_search_xy", height=.35, color=VisUtils.GREEN)
                     visitems_to_clear.append(f"grid_search_xy")
 
-        num_samples = self.ProjectConstants.END_CONFIG_SAMPLE_COUNT
+        num_samples = project_constants.END_CONFIG_SAMPLE_COUNT
 
         if run_probabilistic_search:
 
@@ -1182,7 +1182,7 @@ class ConfigSpacePlanner(MotionUtils):
             end_config = end_configs[end_config_i]
             t_start = time.time()
             try:
-                algo = self.ProjectConstants.KLAMPT_MPLANNER_ALGO
+                algo = project_constants.KLAMPT_MPLANNER_ALGO
                 settings = {'type': algo, 'perturbationRadius': 0.5, 'bidirectional': 1, 'shortcut': 0, 'restart': 0,
                             'restartTermCond': "{foundSolution:1, maxIters:1000}"}
                 plan = cspace.MotionPlan(space)
@@ -1222,21 +1222,21 @@ class ConfigSpacePlanner(MotionUtils):
                 if discretized_path_valid:
                     plan.close()
                     if debug:
-                        print(f"Built valid path with {self.ProjectConstants.KLAMPT_MPLANNER_ALGO} "
+                        print(f"Built valid path with {project_constants.KLAMPT_MPLANNER_ALGO} "
                               f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
                     return discretized_path
 
                 if debug:
-                    print(f"discretizedPath for path built by {self.ProjectConstants.KLAMPT_MPLANNER_ALGO} "
+                    print(f"discretizedPath for path built by {project_constants.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} is invalid. search and discretization completed "
                           f"in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             else:
                 if debug:
-                    print(f"Failed to build a path with {self.ProjectConstants.KLAMPT_MPLANNER_ALGO} "
+                    print(f"Failed to build a path with {project_constants.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             plan.close()
             if debug:
-                print(f"{self.ProjectConstants.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
+                print(f"{project_constants.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
                       f"{len(end_configs)} in {Lg.bold_txt(round(time.time()-t_start,2))} seconds")
         return False
 
@@ -1258,9 +1258,9 @@ class ConfigSpacePlanner(MotionUtils):
         moving_endeff_xyzRf = self.get_end_effector_current_xyzRs()[moving_leg - 1]
         moving_endeff_xyzR0 = r_pose.get_moving_leg_xyzR(moving_leg)
         max_obst_height_in_path = -np.inf
-        r_world = self.ProjectConstants.HOOK_LENGTH + self.ProjectConstants.END_AFFECTOR_RADIUS
+        r_world = project_constants.HOOK_LENGTH + project_constants.END_AFFECTOR_RADIUS
         for i in range(50):
-            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, self.ProjectConstants.STEP_HEIGHT)[0:2]
+            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, project_constants.STEP_HEIGHT)[0:2]
             tallest_obs_height = self.height_map.max_in_radius_r_centered_at_xy(xy_i[0], xy_i[1], r_world)
             max_obst_height_in_path = max(max_obst_height_in_path, tallest_obs_height)
 
@@ -1331,7 +1331,7 @@ class ConfigSpacePlanner(MotionUtils):
                 imax, config_valid, arc_ik_targets, start_config, linear_torso_motion,
                 leg_motion_fn=self.get_parabolic_mid_motion_xyzR, moving_leg_xyzR0=moving_endeff_xyzR0,
                 moving_leg_xyzRf=moving_endeff_xyzRf, moving_end_effector=moving_end_effector,
-                step_height=self.ProjectConstants.STEP_HEIGHT,
+                step_height=project_constants.STEP_HEIGHT,
                 debug=q_arc_debug, sleep_t=q_arc_sleep
             )
 

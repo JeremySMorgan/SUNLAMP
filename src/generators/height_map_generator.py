@@ -2,26 +2,25 @@ import numpy as np
 from klampt.model import collide
 from src.utils.logger import Logger
 from src.utils.data_objects.height_map import HeightMap
+from src.utils import project_constants
 
 
 class HeightMapGenerator:
 
-    def __init__(self, ProjectConstants, world, test_suite):
+    def __init__(self, world, x_startend, y_startend):
 
-        self.ProjectConstants = ProjectConstants
         self.world = world
 
         self.geometry_list = []
         self.initialized = False
 
-        self.x_start = test_suite.HM_X_START
-        self.x_end = test_suite.HM_X_END
-        self.y_start = test_suite.HM_Y_START
-        self.y_end = test_suite.HM_Y_END
+        self.x_start = x_startend[0]
+        self.x_end = x_startend[1]
+        self.y_start = y_startend[0]
+        self.y_end = y_startend[1]
 
-
-        self.x_granularity = self.ProjectConstants.HM_X_GRANULARITY
-        self.y_granularity = self.ProjectConstants.HM_Y_GRANULARITY
+        self.x_granularity = project_constants.HM_X_GRANULARITY
+        self.y_granularity = project_constants.HM_Y_GRANULARITY
 
         self.x_indices = (self.x_end - self.x_start) / self.x_granularity
         self.y_indices = (self.y_end - self.y_start) / self.y_granularity

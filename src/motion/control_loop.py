@@ -9,7 +9,7 @@ from src.utils.py_utils import PyUtils
 from src.motion.motion_planner import MPlannerResults
 from klampt import Simulator
 import _thread
-
+from src.utils import project_constants
 
 class ControlLoop(MotionUtils):
 
@@ -18,16 +18,16 @@ class ControlLoop(MotionUtils):
     CONTINUE_LOOP = 3
 
     def __init__(
-            self, project_constants, world, fs_scatter_obj, fs_seq, height_map, gradient_map,
+            self, world, fs_scatter_obj, fs_seq, height_map, gradient_map,
             u_input=None, debug=False, visualize=False, lidar_mode=False, physics_sim_enabled=False,
             execution_world_vis_id=None, execution_world=None, disable_sleep=False, save_qs=True
     ):
 
         MotionUtils.__init__(
-            self, project_constants, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(),
+            self, world, height_map, fs_scatter_obj.get_scatter_list(), fs_seq.get_state_path(),
             gradient_map, u_input=u_input, include_ik_solver=True, lidar_mode=lidar_mode)
 
-        self.MotionPlanner = ConfigSpacePlanner(project_constants, world, fs_scatter_obj, fs_seq, height_map, gradient_map, u_input=u_input)
+        self.MotionPlanner = ConfigSpacePlanner(world, fs_scatter_obj, fs_seq, height_map, gradient_map, u_input=u_input)
 
         # Control Loop Variables
         # self.curr_stance_idx = 34
@@ -70,7 +70,7 @@ class ControlLoop(MotionUtils):
             self.physics_sim_world = execution_world
             self.sim = Simulator(execution_world)
             self.controller = self.sim.controller(0)
-            self.controller.setRate(self.ProjectConstants.PHYSICS_SIM_CONTROLLER_DT)
+            self.controller.setRate(project_constants.PHYSICS_SIM_CONTROLLER_DT)
 
             self.queue_counter = 0
             self.queue_every_kth = 5
@@ -85,17 +85,17 @@ class ControlLoop(MotionUtils):
                 i += 1
                 print(i, round(time.time() - last_t, 2))
                 last_t = time.time()
-                self.sim.simulate(self.ProjectConstants.PHYSICS_SIM_CONTROLLER_DT)
+                self.sim.simulate(project_constants.PHYSICS_SIM_CONTROLLER_DT)
                 self.sim.updateWorld()
                 f.writelines([str(self.sim.getTime()) + " " + str(self.controller.getSensedConfig())+"\n"])
-                time.sleep(self.ProjectConstants.PHYSICS_SIM_CONTROLLER_DT)
+                time.sleep(project_constants.PHYSICS_SIM_CONTROLLER_DT)
                 if i == 20000:
                     break
         # self.sim_logger.close()
 
     def shutdown(self):
         self.thread_alive = False
-        time.sleep(self.ProjectConstants.CONTROLLER_DT + .01)
+        time.sleep(project_constants.CONTROLLER_DT + .01)
 
     def run(self):
         '''
@@ -220,14 +220,14 @@ class ControlLoop(MotionUtils):
             run_loop = True
 
             if not self.disable_sleep:
-                time.sleep(self.ProjectConstants.CONTROLLER_DT)
+                time.sleep(project_constants.CONTROLLER_DT)
 
     def write_config_to_execution_world_robot(self, config: list):
         if self.execution_world:
             if self.physics_sim_enabled:
                 if self.queue_counter == self.queue_every_kth:
                     print("calling controller.addMilestone(), remaining time:", self.controller.remainingTime())
-                    # self.controller.setLinear(config, self.ProjectConstants.PHYSICS_SIM_CONTROLLER_DT)
+                    # self.controller.setLinear(config, project_constants.PHYSICS_SIM_CONTROLLER_DT)
                     self.controller.addMilestone(config)
                     self.queue_counter = 0
                 self.queue_counter += 1

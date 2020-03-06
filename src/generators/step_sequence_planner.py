@@ -13,7 +13,7 @@ from src.generators.generator_superclass import GeneratorSuperclass
 from src.utils.math_utils import MathUtils
 from src.utils.vis_utils import VisUtils
 from src.utils.py_utils import PyUtils
-
+from src.utils import project_constants
 
 class StepSequencePlanner(GeneratorSuperclass, AStar):
 
@@ -30,15 +30,13 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
     # x in fs_scatter_obj: [x,y,z,cost] - 'Footstep Scatter Point'
     # stance := (x_i, x_j, x_k, x_l, cost), where x_i refers to fs_scatter_obj[i] - 'Stance Space Configuration'
 
-    def __init__(
-            self, ProjectConstants, height_map: HeightMap, scatter_obj: FootstepScatter, hl_traj_obj, fs_cost_map,
+    def __init__(self, height_map: HeightMap, scatter_obj: FootstepScatter, hl_traj_obj, fs_cost_map,
             xy_yaw0, xy_yawf,
             r_poser=None,
             debug=False,
             vis_successors=False,
             deep_debug_visualization=False):
 
-        self.ProjectConstants = ProjectConstants
         self.r_poser = r_poser
         self.hl_traj = hl_traj_obj
         self.fs_cost_map = fs_cost_map
@@ -62,7 +60,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         self.start_state = None
         self.state_path = None
         self.start_state = (len(self.fs_scatter_list) - 4, len(self.fs_scatter_list) - 3, len(self.fs_scatter_list) - 2,
-                            len(self.fs_scatter_list) - 1, self.ProjectConstants.STEP_ORDER[0])
+                            len(self.fs_scatter_list) - 1, project_constants.STEP_ORDER[0])
 
         # High Level Trajectory
         self.high_density_xy_yaw_list = self.hl_traj.get_higher_density_xy_yaw_path()
@@ -74,7 +72,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         self.h_weight = None
         self.save_search_weights()
 
-        GeneratorSuperclass.__init__(self, ProjectConstants, height_map)
+        GeneratorSuperclass.__init__(self, height_map)
         AStar.__init__(self,state=self.start_state,testGoalOnGeneration=True)
 
         # debugging vars
@@ -92,8 +90,8 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         self.print_stat_i = 0
 
     def save_search_weights(self):
-        self.g_weight = self.ProjectConstants.STEPSEQ_G_WEIGHT
-        self.h_weight = self.ProjectConstants.STEPSEQ_H_WEIGHT
+        self.g_weight = project_constants.STEPSEQ_G_WEIGHT
+        self.h_weight = project_constants.STEPSEQ_H_WEIGHT
         if self.debug:
             print("g weight:",Logger.pp_double(self.g_weight),", h_weight:",Logger.pp_double(self.h_weight))
 
@@ -160,7 +158,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         C_xy = 1.0
         # C_yaw = 1.0/5.0
         dif = C_xy*(np.abs(x_ave-self.xy_yawf[0]) + np.abs(y_ave-self.xy_yawf[1])) # + C_yaw*np.abs(np.rad2deg(yaw_rads)-self.xy_yawf[2])
-        ret = dif < self.ProjectConstants.STEPSEQ_GOAL_THRESHOLD
+        ret = dif < project_constants.STEPSEQ_GOAL_THRESHOLD
         if self.debug:
             if ret:
                 print(Logger.styled_text(" Goal State Found","OKGREEN"), "\txy:",Logger.pp_list([x_ave,y_ave]))
@@ -306,10 +304,10 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
 
     def get_next_leg_to_move(self, c_leg):
 
-        idx = self.ProjectConstants.STEP_ORDER.index(c_leg)
-        if idx == len(self.ProjectConstants.STEP_ORDER) - 1:
-            return self.ProjectConstants.STEP_ORDER[0]
-        return self.ProjectConstants.STEP_ORDER[self.ProjectConstants.STEP_ORDER.index(c_leg)+1]
+        idx = project_constants.STEP_ORDER.index(c_leg)
+        if idx == len(project_constants.STEP_ORDER) - 1:
+            return project_constants.STEP_ORDER[0]
+        return project_constants.STEP_ORDER[project_constants.STEP_ORDER.index(c_leg)+1]
 
     def get_end_affectors_xyzc(self, q):
         fl_xyzc = self.fs_scatter_list[int(q[0])]
@@ -340,7 +338,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         return_false = False
 
         ### ____________ reject obviously invalid states
-        r = self.ProjectConstants.STEPSEQ_MAX_FEASIBLE_LEG_TRANSLATION
+        r = project_constants.STEPSEQ_MAX_FEASIBLE_LEG_TRANSLATION
         if visualize:
             if not q_curr == self.kinematically_valid_q_plotted:
                 internal_vis_enabled = True
@@ -387,23 +385,23 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         if moving_leg == 1:
             diaganol_dist = MathUtils._3d_euclidian_distance(fl_xyz_next, br_xyzc)
             if visualize and internal_vis_enabled:
-                VisUtils.visualize_circle(br_xyzc[0],br_xyzc[1],self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST, name="max diaganol distance circle")
+                VisUtils.visualize_circle(br_xyzc[0],br_xyzc[1],project_constants.STEPSEQ_MAX_DIAGNOL_DIST, name="max diaganol distance circle")
         elif moving_leg == 2:
             diaganol_dist = MathUtils._3d_euclidian_distance(fr_xyz_next, bl_xyzc)
             if visualize and internal_vis_enabled:
-                VisUtils.visualize_circle(bl_xyzc[0],bl_xyzc[1],self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
+                VisUtils.visualize_circle(bl_xyzc[0],bl_xyzc[1],project_constants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
         elif moving_leg == 3:
             diaganol_dist = MathUtils._3d_euclidian_distance(br_xyz_next, fl_xyzc)
             if visualize and internal_vis_enabled:
-                VisUtils.visualize_circle(fl_xyzc[0],fl_xyzc[1],self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
+                VisUtils.visualize_circle(fl_xyzc[0],fl_xyzc[1],project_constants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
         elif moving_leg == 4:
             diaganol_dist = MathUtils._3d_euclidian_distance(bl_xyz_next, fr_xyzc)
             if visualize and internal_vis_enabled:
-                VisUtils.visualize_circle(fr_xyzc[0],fr_xyzc[1],self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
+                VisUtils.visualize_circle(fr_xyzc[0],fr_xyzc[1],project_constants.STEPSEQ_MAX_DIAGNOL_DIST,name="max diaganol distance circle")
         else:
             Logger.log(("Unrecognized leg to move:" + str(moving_leg)), "FAIL")
 
-        if diaganol_dist > self.ProjectConstants.STEPSEQ_MAX_DIAGNOL_DIST:
+        if diaganol_dist > project_constants.STEPSEQ_MAX_DIAGNOL_DIST:
             return_false = True
             if not internal_vis_enabled:
                 return False
@@ -413,8 +411,8 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
 
         ### ____________ Must be in correct region
 
-        X_wingspan = 2 * self.ProjectConstants.BASE_STATE_END_EFF_DX_FROM_TORSO
-        Y_wingspan = 2 * self.ProjectConstants.BASE_STATE_END_EFF_DY_FROM_TORSO
+        X_wingspan = 2 * project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO
+        Y_wingspan = 2 * project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO
 
         if moving_leg == 1:
 
@@ -435,19 +433,19 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             # if fl next is in circle of radius STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS
             #  centered at bl_next -> infeasible
 
-            r = self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS
+            r = project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS
 
             if Point(bl_xyzc[0], bl_xyzc[1]).buffer(r).contains(fl_nextP):
                 return False
 
             if Point(fr_xyzc[0], fr_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
                     fl_nextP):
                 return False
 
             diag_midpointX, diag_midpointY = (bl_xyzc[0] + fr_xyzc[0]) / 2.0, (bl_xyzc[1] + fr_xyzc[1]) / 2.0
             if Point(diag_midpointX, diag_midpointY).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(
                     fl_nextP):
                 return False
 
@@ -455,13 +453,13 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             x_rside_circ_local, y_rside_circ_local = MathUtils._2d_rotation_transformation(X_wingspan, Y_wingspan, theta_rightside_circ)
             rside_circX = x_rside_circ_local + br_xyzc[0]
             rside_circY = y_rside_circ_local + br_xyzc[1]
-            right_side_circ = Point(rside_circX, rside_circY).buffer(self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+            right_side_circ = Point(rside_circX, rside_circY).buffer(project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             theta_backside_circ = np.arctan2(bl_xyzc[1] - br_xyzc[1], bl_xyzc[0] - br_xyzc[0]) - np.pi / 2.0
             x_backside_circ_local, y_backside_circ_local = MathUtils._2d_rotation_transformation(X_wingspan, Y_wingspan, theta_backside_circ)
             backside_circX = x_backside_circ_local + br_xyzc[0]
             backside_circY = y_backside_circ_local + br_xyzc[1]
-            backside_circ = Point(backside_circX, backside_circY).buffer( self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+            backside_circ = Point(backside_circX, backside_circY).buffer( project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             if not (right_side_circ.contains(fl_nextP) or backside_circ.contains(fl_nextP)):
                 return False
@@ -483,31 +481,31 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             fr_nextP = Point(fr_xyz_next[0], fr_xyz_next[1])
 
             if Point(fl_xyzc[0], fl_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
                     fr_nextP):
                 return False
 
             if Point(br_xyzc[0], br_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
                     fr_nextP):
                 return False
 
             diag_midpointX, diag_midpointY = (fl_xyzc[0] + br_xyzc[0]) / 2.0, (fl_xyzc[1] + br_xyzc[1]) / 2.0
             if Point(diag_midpointX, diag_midpointY).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains( fr_nextP):
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains( fr_nextP):
                 return False
 
             theta_leftside_circ = np.arctan2(fl_xyzc[1] - bl_xyzc[1], fl_xyzc[0] - bl_xyzc[0])
             x_lside_circ_local, y_lside_circ_local = MathUtils._2d_rotation_transformation(X_wingspan, -Y_wingspan, theta_leftside_circ)
             lside_circX = x_lside_circ_local + bl_xyzc[0]
             lside_circY = y_lside_circ_local + bl_xyzc[1]
-            lside_circ = Point(lside_circX, lside_circY).buffer(self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+            lside_circ = Point(lside_circX, lside_circY).buffer(project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             theta_backside_circ = np.arctan2(bl_xyzc[1] - br_xyzc[1], bl_xyzc[0] - br_xyzc[0]) - (np.pi) / 2.0
             x_backside_circ_local, y_backside_circ_local = MathUtils._2d_rotation_transformation(X_wingspan, 0.0, theta_backside_circ)
             backside_circX = x_backside_circ_local + br_xyzc[0]
             backside_circY = y_backside_circ_local + br_xyzc[1]
-            backside_circ = Point(backside_circX, backside_circY).buffer( self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+            backside_circ = Point(backside_circX, backside_circY).buffer( project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             if not (lside_circ.contains(fr_nextP) or backside_circ.contains(fr_nextP)):
                 return False
@@ -530,23 +528,23 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             br_nextP = Point(br_xyz_next[0], br_xyz_next[1])
 
             if Point(fr_xyzc[0], fr_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(br_nextP):
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(br_nextP):
                 return False
 
             if Point(bl_xyzc[0], bl_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(br_nextP):
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(br_nextP):
                 return False
 
             diag_midpointX, diag_midpointY = (bl_xyzc[0] + fr_xyzc[0]) / 2.0, (bl_xyzc[1] + fr_xyzc[1]) / 2.0
             if Point(diag_midpointX, diag_midpointY).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(br_nextP):
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(br_nextP):
                 return False
 
             theta_leftside_circ = np.arctan2(fl_xyzc[1] - bl_xyzc[1], fl_xyzc[0] - bl_xyzc[0])
             x_lside_circ_local, y_lside_circ_local = MathUtils._2d_rotation_transformation(0.0, -Y_wingspan, theta_leftside_circ)
             lside_circX = x_lside_circ_local + bl_xyzc[0]
             lside_circY = y_lside_circ_local + bl_xyzc[1]
-            lside_circ = Point(lside_circX, lside_circY).buffer(self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+            lside_circ = Point(lside_circX, lside_circY).buffer(project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             theta_frontside_circ = np.arctan2(fl_xyzc[1] - fr_xyzc[1], fl_xyzc[0] - fr_xyzc[0]) - (np.pi) / 2.0
             x_frontside_circ_local, y_backside_circ_local = MathUtils._2d_rotation_transformation(-X_wingspan, 0.0,
@@ -554,7 +552,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             frontside_circX = x_frontside_circ_local + fr_xyzc[0]
             frontside_circY = y_backside_circ_local + fr_xyzc[1]
             frontside_circ = Point(frontside_circX, frontside_circY).buffer(
-                self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+                project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             if not (lside_circ.contains(br_nextP) or frontside_circ.contains(br_nextP)):
                 return False
@@ -576,17 +574,17 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             bl_nextP = Point(bl_xyz_next[0], bl_xyz_next[1])
 
             if Point(fl_xyzc[0], fl_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(bl_nextP):
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(bl_nextP):
                 return False
 
             if Point(br_xyzc[0], br_xyzc[1]).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS).contains(
                     bl_nextP):
                 return False
 
             diag_midpointX, diag_midpointY = (fl_xyzc[0] + br_xyzc[0]) / 2.0, (fl_xyzc[1] + br_xyzc[1]) / 2.0
             if Point(diag_midpointX, diag_midpointY).buffer(
-                    self.ProjectConstants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(
+                    project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_COMTRI_DIAG_MIDPOINT).contains(
                     bl_nextP):
                 return False
 
@@ -596,7 +594,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             rside_circX = x_rside_circ_local + br_xyzc[0]
             rside_circY = y_rside_circ_local + br_xyzc[1]
             right_side_circ = Point(rside_circX, rside_circY).buffer(
-                self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+                project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             theta_frontside_circ = np.arctan2(fl_xyzc[1] - fr_xyzc[1], fl_xyzc[0] - fr_xyzc[0]) - (np.pi) / 2.0
             x_frontside_circ_local, y_backside_circ_local = MathUtils._2d_rotation_transformation(
@@ -604,7 +602,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             frontside_circX = x_frontside_circ_local + fr_xyzc[0]
             frontside_circY = y_backside_circ_local + fr_xyzc[1]
             frontside_circ = Point(frontside_circX, frontside_circY).buffer(
-                self.ProjectConstants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
+                project_constants.STEPSEQ_KINEMATIC_FEASIBILITY_CIRC_RADIUS)
 
             if not (right_side_circ.contains(bl_nextP) or frontside_circ.contains(bl_nextP)):
                 return False
@@ -726,13 +724,13 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
                 # note: the false return is new here
                 return False
 
-        if self.ProjectConstants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS:
-            if d_1_3d > self.ProjectConstants.STEPSEQ_D12_3D_MULTIPLIER * self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST:
+        if project_constants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS:
+            if d_1_3d > project_constants.STEPSEQ_D12_3D_MULTIPLIER * project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST:
                 if verbose_debug:
                     print("d_1_3d:", d_1_3d, "Returning FALSE")
                 return False
 
-        if d_1_2d > self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST:
+        if d_1_2d > project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST:
             if verbose_debug:
                 print("d_1_3d:", d_1_3d, "Returning FALSE")
             return False
@@ -925,14 +923,14 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
             print("AttributeError: 'GeometryCollection' object has no attribute 'x'")
             return False
 
-        if self.ProjectConstants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS:
-            if d_2_3d > self.ProjectConstants.STEPSEQ_D12_3D_MULTIPLIER * \
-                    self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2:
+        if project_constants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS:
+            if d_2_3d > project_constants.STEPSEQ_D12_3D_MULTIPLIER * \
+                    project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2:
                 if verbose_debug:
                     print("d_2_3d:", d_2, "Returning FALSE")
                 return False
 
-        if d_2 > self.ProjectConstants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2:
+        if d_2 > project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2:
             if verbose_debug: print("stance: for stance d_2:",d_2,"Returning FALSE")
             return False
 
@@ -957,10 +955,10 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         return min_error_idx
 
     def get_hookpoints(self, torso_yaw_est, fl, fr, br, bl):
-        fl_hookpoint_x_local, fl_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, self.ProjectConstants.HOOK_LENGTH, torso_yaw_est)
-        fr_hookpoint_x_local, fr_hookpoint_y_local= MathUtils._2d_rotation_transformation(0,  -self.ProjectConstants.HOOK_LENGTH,torso_yaw_est)
-        br_hookpoint_x_local, br_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, -self.ProjectConstants.HOOK_LENGTH, torso_yaw_est)
-        bl_hookpoint_x_local, bl_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, self.ProjectConstants.HOOK_LENGTH,torso_yaw_est)
+        fl_hookpoint_x_local, fl_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, project_constants.HOOK_LENGTH, torso_yaw_est)
+        fr_hookpoint_x_local, fr_hookpoint_y_local= MathUtils._2d_rotation_transformation(0,  -project_constants.HOOK_LENGTH,torso_yaw_est)
+        br_hookpoint_x_local, br_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, -project_constants.HOOK_LENGTH, torso_yaw_est)
+        bl_hookpoint_x_local, bl_hookpoint_y_local = MathUtils._2d_rotation_transformation(0, project_constants.HOOK_LENGTH,torso_yaw_est)
         fl_hookx, fl_hooky, fr_hookx, fr_hooky, br_hookx, br_hooky, bl_hookx, bl_hooky = fl[0] + fl_hookpoint_x_local, fl[1] + fl_hookpoint_y_local, \
                fr[0] + fr_hookpoint_x_local, fr[1] + fr_hookpoint_y_local,\
                br[0] + br_hookpoint_x_local, br[1] + br_hookpoint_y_local, \
@@ -970,25 +968,25 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
     def get_xy_hookpoints(self, leg_to_move, q_next_x, q_next_y, yaw_est ):
         x_local, y_local = -1, -1
         if leg_to_move == 1:
-            x_local, y_local = MathUtils._2d_rotation_transformation(0, self.ProjectConstants.HOOK_LENGTH, yaw_est)
+            x_local, y_local = MathUtils._2d_rotation_transformation(0, project_constants.HOOK_LENGTH, yaw_est)
         elif leg_to_move == 2:
-            x_local, y_local = MathUtils._2d_rotation_transformation(0, -self.ProjectConstants.HOOK_LENGTH,  yaw_est)
+            x_local, y_local = MathUtils._2d_rotation_transformation(0, -project_constants.HOOK_LENGTH,  yaw_est)
         elif leg_to_move == 3:
-            x_local, y_local = MathUtils._2d_rotation_transformation(0, -self.ProjectConstants.HOOK_LENGTH,  yaw_est)
+            x_local, y_local = MathUtils._2d_rotation_transformation(0, -project_constants.HOOK_LENGTH,  yaw_est)
         elif leg_to_move == 4:
-            x_local, y_local = MathUtils._2d_rotation_transformation(0, self.ProjectConstants.HOOK_LENGTH, yaw_est)
+            x_local, y_local = MathUtils._2d_rotation_transformation(0, project_constants.HOOK_LENGTH, yaw_est)
         else:
             Logger.log(("Unrecognized leg to move:" + str(leg_to_move)), "FAIL")
         return q_next_x + x_local, q_next_y + y_local
 
     def dist_from_hl_traj_costfn(self, xy_endeff, xy_hltraj):
         dist = MathUtils._2d_euclidian_distance(xy_endeff, xy_hltraj)
-        if np.abs(dist - self.ProjectConstants.BASE_STATE_END_EFF_DY_FROM_TORSO) < self.ProjectConstants.STEPSEQ_NONPENALIZED_WIDTH_FROM_BASESTATE_Y:
+        if np.abs(dist - project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO) < project_constants.STEPSEQ_NONPENALIZED_WIDTH_FROM_BASESTATE_Y:
             return 0
-        return (dist-self.ProjectConstants.BASE_STATE_END_EFF_DY_FROM_TORSO)**2
+        return (dist-project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO)**2
 
     def terrain_costfn(self, q_next_x, q_next_y):
-        r = self.ProjectConstants.END_AFFECTOR_RADIUS
+        r = project_constants.END_AFFECTOR_RADIUS
         r_sqrt2 = r/np.sqrt(2)
         try:
             terrain_cost = (1/9) * (self.fs_cost_map.cost_at_xy(q_next_x, q_next_y) +
@@ -1001,19 +999,19 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         return terrain_cost
 
     def ideal_location_costfn(self, x_des, y_des, q_next_x, q_next_y):
-        if np.sqrt((q_next_x - x_des) ** 2 + ( q_next_y - y_des) ** 2) < self.ProjectConstants.STEPSEQ_ZERO_COST_RADIUS:
+        if np.sqrt((q_next_x - x_des) ** 2 + ( q_next_y - y_des) ** 2) < project_constants.STEPSEQ_ZERO_COST_RADIUS:
             return 0
         return (q_next_x - x_des) ** 2 + (q_next_y - y_des) ** 2
 
     def hook_point_cost(self, q_next_x, q_next_y, hookpoint_next_x, hookpoint_next_y):
         q_next_h = self.height_map.height_at_xy(q_next_x, q_next_y)
         hook_point_h = self.height_map.height_at_xy(hookpoint_next_x, hookpoint_next_y)
-        if hook_point_h > q_next_h + self.ProjectConstants.HOOK_DIST_TO_GROUND - self.ProjectConstants.STEPSEQ_HOOK_SAFETY_MARGIN:
-            return self.ProjectConstants.STEPSEQ_PREDICTED_HOOK_COLLISION_COST
+        if hook_point_h > q_next_h + project_constants.HOOK_DIST_TO_GROUND - project_constants.STEPSEQ_HOOK_SAFETY_MARGIN:
+            return project_constants.STEPSEQ_PREDICTED_HOOK_COLLISION_COST
         return 0
 
     def height_around_endeff_costfn(self, x, y, debug=False):
-        r = self.ProjectConstants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
+        r = project_constants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
         height_at_xy = self.height_map.height_at_xy(x, y)
         max_height_in_circle_r = self.height_map.max_in_radius_r_centered_at_xy(x, y, r)
         ret = 0
@@ -1053,7 +1051,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
                 torso_x, torso_y, torso_yaw_estimated = self.get_estimated_torso_xy_yaw_rads(curr_state)
                 torso_yaw_deg_est = np.rad2deg(torso_yaw_estimated)
 
-                indexes_to_shift_along_hl_trajectory = int(self.ProjectConstants.STEPSEQ_TRANSLATION_DISTANCE /
+                indexes_to_shift_along_hl_trajectory = int(project_constants.STEPSEQ_TRANSLATION_DISTANCE /
                                                            self.hl_traj.ave_higher_density_xy_yaw_path_distance_change)
                 index_of_best_fitting_xy_yaw_along_smoothed_path = self.get_best_fitting_smoothed_traj_idx(curr_state, torso_x, torso_y, torso_yaw_deg_est)
                 idx_shifted_torso = index_of_best_fitting_xy_yaw_along_smoothed_path + indexes_to_shift_along_hl_trajectory
@@ -1066,7 +1064,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
                 torso_dy = torso_xy_yaw_when_shifted_down_smoothed_traj[1] - torso_y
                 i = 1
                 torso_dl = np.sqrt(torso_dy**2 + torso_dx**2)
-                while torso_dl < .90 *self.ProjectConstants.STEPSEQ_TRANSLATION_DISTANCE:
+                while torso_dl < .90 *project_constants.STEPSEQ_TRANSLATION_DISTANCE:
                     try:
                         idx_shifted_torso += i
                         torso_xy_yaw_when_shifted_down_smoothed_traj = self.high_density_xy_yaw_list[idx_shifted_torso]
@@ -1088,7 +1086,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
                 if not fl_base:
                     return np.inf
 
-                base_statex_num_idxs_along_hltraj = int(self.ProjectConstants.BASE_STATE_END_EFF_DX_FROM_TORSO /
+                base_statex_num_idxs_along_hltraj = int(project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO /
                                                          self.hl_traj.ave_higher_density_xy_yaw_path_distance_change)
 
                 idx_torso_shifted_plus_basestate_x = -1
@@ -1130,7 +1128,7 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
 
             dist_from_hl_traj_cost = 0
             if not ignore_dist_from_hl_traj:
-                dist_from_hl_traj_cost = self.ProjectConstants.STEPSEQ_DIST_FROM_HL_TRAJ_COST_COEFF * \
+                dist_from_hl_traj_cost = project_constants.STEPSEQ_DIST_FROM_HL_TRAJ_COST_COEFF * \
                                          self.dist_from_hl_traj_costfn( [q_next_x, q_next_y],
                                              pt_at_torso_est_shifted_by_translation_dist_plus_base_state_x)
 
@@ -1138,13 +1136,13 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
                 return StepSequencePlanner.OUT_OF_BOUND_COST
 
             hook_point_cost = self.hook_point_cost(q_next_x, q_next_y, hookpoint_next_x, hookpoint_next_y)
-            terrain_cost = self.ProjectConstants.STEPSEQ_TERRAIN_COST_COEFF * self.terrain_costfn(q_next_x, q_next_y)
-            ideal_location_cost = self.ProjectConstants.STEPSEQ_IDEAL_LOCATION_COST_COEFF * \
+            terrain_cost = project_constants.STEPSEQ_TERRAIN_COST_COEFF * self.terrain_costfn(q_next_x, q_next_y)
+            ideal_location_cost = project_constants.STEPSEQ_IDEAL_LOCATION_COST_COEFF * \
                                   self.ideal_location_costfn(
                                       leg_to_move_x_desired, leg_to_move_y_desired, q_next_x, q_next_y
                                   )
 
-            height_around_endeff_cost = self.ProjectConstants.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * \
+            height_around_endeff_cost = project_constants.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * \
                                         self.height_around_endeff_costfn(q_next_x, q_next_y)
 
             c = terrain_cost + ideal_location_cost + dist_from_hl_traj_cost + hook_point_cost + height_around_endeff_cost
@@ -1243,15 +1241,15 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
 
                                 hookpoint_next_x, hookpoint_next_y = self.get_xy_hookpoints(leg_to_move, world_x, world_y, torso_yaw_estimated)
 
-                                world_cost = self.ProjectConstants.STEPSEQ_TERRAIN_COST_COEFF * self.terrain_costfn(world_x, world_y)
+                                world_cost = project_constants.STEPSEQ_TERRAIN_COST_COEFF * self.terrain_costfn(world_x, world_y)
 
                                 hook_point_cost = self.hook_point_cost(world_x, world_y, hookpoint_next_x, hookpoint_next_y)
 
-                                porabala_cost = self.ProjectConstants.STEPSEQ_IDEAL_LOCATION_COST_COEFF * \
+                                porabala_cost = project_constants.STEPSEQ_IDEAL_LOCATION_COST_COEFF * \
                                                 self.ideal_location_costfn(leg_to_move_x_desired, leg_to_move_y_desired, world_x, world_y)
 
                                 dist_from_hl_traj_cost = \
-                                    self.ProjectConstants.STEPSEQ_DIST_FROM_HL_TRAJ_COST_COEFF * \
+                                    project_constants.STEPSEQ_DIST_FROM_HL_TRAJ_COST_COEFF * \
                                     self.dist_from_hl_traj_costfn(
                                         [world_x, world_y],
                                         pt_at_torso_est_shifted_by_translation_dist_plus_base_state_x

@@ -3,12 +3,13 @@ import numpy as np
 from scipy.ndimage.filters import convolve
 # from src.utils.data_objects.convolution_cost_map import ConvolutionCostMap
 from src.utils.data_objects.footstep_cost_map import FootstepCostMap
+from src.utils import project_constants
 
 
 class ConvolutionCostMapGenerator:
 
-    def __init__(self, ProjectConstants, fs_cost_map_obj):
-        self.ProjectConstants = ProjectConstants
+    def __init__(self, fs_cost_map_obj):
+
         self.fs_cost_map_obj: FootstepCostMap = fs_cost_map_obj
 
         self.decimal_round = 5
@@ -33,8 +34,8 @@ class ConvolutionCostMapGenerator:
 
         # print("max(np_cost_arr):", np.max(np_cost_arr))
 
-        kernel_sizex = int((np_cost_arr.shape[0]*2*self.ProjectConstants.CONV_X_WIDTH)/(self.x_max - self.x_min))
-        kernel_sizey = int((np_cost_arr.shape[1]*2*self.ProjectConstants.CONV_Y_WIDTH)/(self.y_max - self.y_min))
+        kernel_sizex = int((np_cost_arr.shape[0]*2*project_constants.CONV_X_WIDTH)/(self.x_max - self.x_min))
+        kernel_sizey = int((np_cost_arr.shape[1]*2*project_constants.CONV_Y_WIDTH)/(self.y_max - self.y_min))
 
         # Both odd
         if kernel_sizex % 2 == 0:
@@ -45,7 +46,7 @@ class ConvolutionCostMapGenerator:
 
         # print("kernel_sizex:",kernel_sizex)
         # print("x,y cell world width:",xcell_world_width,",",ycell_world_width,"\t x delta")
-        # print("self.ProjectConstants.CONV_Y_WIDTH:",self.ProjectConstants.CONV_Y_WIDTH)
+        # print("project_constants.CONV_Y_WIDTH:",project_constants.CONV_Y_WIDTH)
         # print("kernel_sizex:",kernel_sizex)
         kernlen = kernel_sizex
 
@@ -132,7 +133,7 @@ class ConvolutionCostMapGenerator:
         return self.conv_cost_array_obj
 
     def normalize_cost_arr(self):
-        self.conv_cost_array_obj.normalize_cost_arr(self.ProjectConstants.CMAP_NORMALIZED_MAX_VALUE)
+        self.conv_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE)
 
     def get_xy_start_finals(self, x, y, xradius, yradius):
         x_0 = x - xradius

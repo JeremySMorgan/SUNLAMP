@@ -2,16 +2,15 @@ import numpy as np
 from klampt import vis
 from klampt.model import trajectory
 from src.utils.logger import Logger
-
+from src.utils import project_constants
 
 from src.utils.math_utils import MathUtils
 
 
 class GeneratorSuperclass:
 
-    def __init__(self, ProjectConstants, height_map):
+    def __init__(self, height_map):
         self.height_map = height_map
-        self.ProjectConstants = ProjectConstants
         self.x_start = self.height_map.x_vars[0]
         self.x_end = self.height_map.x_vars[1]
         self.y_start = self.height_map.y_vars[0]
@@ -21,7 +20,7 @@ class GeneratorSuperclass:
         yaw_rad = np.deg2rad(xy_yaw_deg[2])
         x = xy_yaw_deg[0]
         y = xy_yaw_deg[1]
-        base = (self.ProjectConstants.BASE_STATE_END_EFF_DX_FROM_TORSO, self.ProjectConstants.BASE_STATE_END_EFF_DY_FROM_TORSO)
+        base = (project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO, project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO)
         fl = MathUtils._2d_rotation_transformation(base[0], base[1], yaw_rad)
         fr = MathUtils._2d_rotation_transformation(base[0], -base[1], yaw_rad)
         bl = MathUtils._2d_rotation_transformation(-base[0], base[1], yaw_rad)
