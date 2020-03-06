@@ -12,3 +12,5 @@ git add data/simulation_test_worlds/objects/\*.obj
 git add data/simulation_test_worlds/objects/\*.off
 git add data/simulation_test_worlds/objects/\*.tri
 git add data/simulation_test_worlds/objects/\*.geom
+
+git add data/*.txt

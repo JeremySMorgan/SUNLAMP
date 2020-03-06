@@ -45,17 +45,20 @@ def main():
     cloop_run_name = ""
     visualize = True
     execution_world_enabled = True
-    physics_sim_enabled = False
 
     srunner = SystemRunner()
     srunner.initialize_sim_world(
-        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled, physics_sim_enabled,
-        visualize=visualize, cloop_run_name=cloop_run_name)
+        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
+        visualize=visualize,
+        cloop_run_name=cloop_run_name
+    )
+    srunner.run()
+    srunner.save_all()
 
     # srunner.run(ignore_saved_cloop=True)
     # srunner.run(run_mplanner=False)
     # srunner.run(run_mplanner=False)
-    # srunner.run(run_splanner=False)
+    srunner.run(run_hltplanner=)
     # srunner.run(ignore_saved_splan=True)
     # srunner.run(only_mapping=True)
     # srunner.run()

@@ -121,8 +121,9 @@ class SystemRunner:
         self.vis_window_id = None
 
     def initialize_sim_world(
-            self, x_inbound_range, y_inbound_range, xy_yaw0, xy_yawf, world_name, execution_world_enabled: bool,
-            physics_sim_enabled, visualize=True, cloop_run_name=None):
+            self,
+            x_inbound_range, y_inbound_range, xy_yaw0, xy_yawf, world_name,
+            execution_world_enabled=True, physics_sim_enabled=False, visualize=True, cloop_run_name=None):
 
         self.HM_X_START = x_inbound_range[0]
         self.HM_X_END = x_inbound_range[1]
