@@ -1,5 +1,40 @@
 import math
 
+
+# __________________________________ Logging / Visualization
+
+# class_id's: (for internal debugging methods)
+# 0 - system_runner
+# 1 - high_level_trajectory_generator.py
+# 2 - step_sequence_generator.py
+# 3 - motion_planner
+# 4 - control_loop
+
+# 0 - No output
+# 1 - Only fatal errors
+# 2 - fatal errors + initialization/completion info
+# 3 - fatal errors + initialization/completion2 info + general info/status
+# 4 - fatal errors + initialization/completion2 info + general info/status + detailed debugging
+
+SYS_RUNNER_VERBOSITY = 2
+HL_TRAJ_VERBOSITY = 2
+STEPSEQ_VERBOSITY = 2
+MPLANNER_VERBOSITY = 2
+CLOOP_VERBOSITY = 2
+
+LOGGER_COLORS_ENABLED = False
+
+STEPSEQ_VISUALIZE_SUCCESSOR = True
+STEPSEQ_VISUALIZE_INDIVIDUAL_FS_PLACEMENT_SEARCH = False
+
+MPLANNER_VIS_ENABLED = True
+
+HL_TRAJ_VISUALIZE_ROUTE = True
+
+HL_TRAJ_MAX_RUNTIME = 10000000
+STEPSEQ_MAX_RUNTIME = 10000000
+
+
 # __________________________________ Kinematic Constants
 END_EFFECTOR_HEIGHT = .139 - .001
 END_AFFECTOR_RADIUS = .05  # 5 cm - radius of the end effector
@@ -14,7 +49,6 @@ TORSO_d = (TORSO_L - 2 * SHOULDER_X) / 2  # distance from shoulder to front/back
 SHOULDER_TORSO_PSI_RADS = .620089205322
 HOOK_LENGTH = .155 - .0175
 HOOK_DIST_TO_GROUND = .015 -.0025
-
 
 
 # __________________________________ Links Indexes
@@ -178,6 +212,8 @@ KLAMPT_MPLANNER_ALGO = "sbl"       # rrt, prm, sbl, sblprt
 
 END_CONFIG_SAMPLE_COUNT = 100
 CONTROLLER_DT = .0075
+CLOOP_ENABLE_SLEEP = True
+CLOOP_SAVE_Qs = True
 
 # _ Safety Margins
 END_RANGE_MULTIPLIER = 1.15

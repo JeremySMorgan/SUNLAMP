@@ -3,7 +3,7 @@ import numpy as np
 from scipy.ndimage.filters import convolve
 # from src.utils.data_objects.convolution_cost_map import ConvolutionCostMap
 from src.utils.data_objects.footstep_cost_map import FootstepCostMap
-from src.utils import project_constants
+from src.utils import config
 
 
 class ConvolutionCostMapGenerator:
@@ -34,8 +34,8 @@ class ConvolutionCostMapGenerator:
 
         # print("max(np_cost_arr):", np.max(np_cost_arr))
 
-        kernel_sizex = int((np_cost_arr.shape[0]*2*project_constants.CONV_X_WIDTH)/(self.x_max - self.x_min))
-        kernel_sizey = int((np_cost_arr.shape[1]*2*project_constants.CONV_Y_WIDTH)/(self.y_max - self.y_min))
+        kernel_sizex = int((np_cost_arr.shape[0] * 2 * config.CONV_X_WIDTH) / (self.x_max - self.x_min))
+        kernel_sizey = int((np_cost_arr.shape[1] * 2 * config.CONV_Y_WIDTH) / (self.y_max - self.y_min))
 
         # Both odd
         if kernel_sizex % 2 == 0:
@@ -133,7 +133,7 @@ class ConvolutionCostMapGenerator:
         return self.conv_cost_array_obj
 
     def normalize_cost_arr(self):
-        self.conv_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE)
+        self.conv_cost_array_obj.normalize_cost_arr(config.CMAP_NORMALIZED_MAX_VALUE)
 
     def get_xy_start_finals(self, x, y, xradius, yradius):
         x_0 = x - xradius

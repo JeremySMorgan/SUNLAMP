@@ -2,7 +2,7 @@
 from klampt import WorldModel
 from klampt import vis
 from klampt import Simulator
-from src.utils import project_constants
+from src.utils import config
 
 class PhysicsSim:
 
@@ -14,7 +14,7 @@ class PhysicsSim:
         self.sim.setGravity([0, 0, 0])
 
         self.controller = self.sim.controller(0)
-        self.controller.setRate(project_constants.CONTROLLER_DT)
+        self.controller.setRate(config.CONTROLLER_DT)
 
     def suspend(self):
         self.suspend = True
@@ -23,4 +23,4 @@ class PhysicsSim:
 
         while not self.suspend:
             self.sim.updateWorld()
-            self.sim.simulate(project_constants.CONTROLLER_DT)
+            self.sim.simulate(config.CONTROLLER_DT)

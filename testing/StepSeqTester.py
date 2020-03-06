@@ -3,7 +3,7 @@ import time
 from src.generators.step_sequence_planner import StepSequencePlanner
 import klampt
 from klampt import vis
-from src.utils import project_constants
+from src.utils import config
 
 class StepSequencePlannerTester:
 
@@ -20,7 +20,7 @@ class StepSequencePlannerTester:
         self.start_state = (len(self.fs_scatter) - 4, len(self.fs_scatter) - 3, len(self.fs_scatter) - 2, len(self.fs_scatter) - 1, 1)
 
         self.step_seq_planner = StepSequencePlanner(
-            project_constants, height_map, scatter_obj, hl_traj_obj, fs_cost_map, xy_yaw0, xy_yawf,
+            config, height_map, scatter_obj, hl_traj_obj, fs_cost_map, xy_yaw0, xy_yawf,
             r_poser=self.r_poser, debug=True, vis_successors=True, deep_debug_visualization=True)
 
     def test_height_around_endeff_costfn(self):
@@ -28,7 +28,7 @@ class StepSequencePlannerTester:
         ret = self.step_seq_planner.height_around_endeff_costfn(br_xyz[0], br_xyz[1], debug=True)
 
         sphere = klampt.GeometricPrimitive()
-        sphere.setSphere([br_xyz[0], br_xyz[1], .1], project_constants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R)
+        sphere.setSphere([br_xyz[0], br_xyz[1], .1], config.STEPSEQ_HEIGHT_AROUND_ENDEFF_R)
         vis.add("sphere", sphere)
         vis.setColor("sphere", 0, 0, 1, 0.5)
 

@@ -6,7 +6,7 @@ from scripts.world_builder import WorldBuilder
 from src.system_runner import SystemRunner
 from src.utils.logger import Logger
 from src.lidar.pcloud_parser import PCloudParser
-from src.utils import project_constants
+from src.utils import config
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 
 
@@ -50,12 +50,13 @@ def main():
     srunner.initialize_sim_world(
         x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
         visualize=visualize,
-        cloop_run_name=cloop_run_name
-    )
-    # srunner.run()
-    # srunner.save_all()
+        cloop_run_name=cloop_run_name)
 
-    srunner.visualize()
+    srunner.delete_all_saved_data()
+    srunner.run()
+    srunner.save_all()
+
+    # srunner.visualize()
 
     # srunner.run(ignore_saved_cloop=True)
     # srunner.run(run_mplanner=False)
@@ -66,6 +67,8 @@ def main():
     # srunner.save_all()
     # srunner.visualize(visualize_stepseq=False, visualize_hltraj=False, skip_to_pct_through_cloop_output=0)
     # srunner.visualize_cmap_in_klampt_vis(step=7)
+
+
 
 
 

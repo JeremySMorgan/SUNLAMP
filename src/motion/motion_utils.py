@@ -12,7 +12,7 @@ from shapely.geometry import Point
 from src.utils.math_utils import MathUtils
 from src.utils.vis_utils import VisUtils
 from src.utils.data_objects.height_map import HeightMap
-from src.utils import project_constants
+from src.utils import config
 
 class RobotPose:
 
@@ -136,11 +136,11 @@ class MotionUtils:
         self.stance_path = state_path
         self.world = world
         self.robosimian = world.robot(0)
-        self.bl_end_effector = self.robosimian.link(project_constants.BL_ACTIVE_DOFS[len(project_constants.BL_ACTIVE_DOFS) - 1])
-        self.br_end_effector = self.robosimian.link(project_constants.BR_ACTIVE_DOFS[len(project_constants.BR_ACTIVE_DOFS) - 1])
-        self.fl_end_effector = self.robosimian.link(project_constants.FL_ACTIVE_DOFS[len(project_constants.FL_ACTIVE_DOFS) - 1])
-        self.fr_end_effector = self.robosimian.link(project_constants.FR_ACTIVE_DOFS[len(project_constants.FR_ACTIVE_DOFS) - 1])
-        self.torso = self.robosimian.link(project_constants.TORSO_LINK_INDEX)
+        self.bl_end_effector = self.robosimian.link(config.BL_ACTIVE_DOFS[len(config.BL_ACTIVE_DOFS) - 1])
+        self.br_end_effector = self.robosimian.link(config.BR_ACTIVE_DOFS[len(config.BR_ACTIVE_DOFS) - 1])
+        self.fl_end_effector = self.robosimian.link(config.FL_ACTIVE_DOFS[len(config.FL_ACTIVE_DOFS) - 1])
+        self.fr_end_effector = self.robosimian.link(config.FR_ACTIVE_DOFS[len(config.FR_ACTIVE_DOFS) - 1])
+        self.torso = self.robosimian.link(config.TORSO_LINK_INDEX)
         self.height_map = height_map
         if include_ik_solver:
             from .ik_solver_utils import IKSolverUtils
@@ -423,13 +423,13 @@ class MotionUtils:
 
     def get_active_dofs_from_end_effector(self, end_effector):
         if end_effector == 1:
-            return project_constants.FL_ACTIVE_DOFS
+            return config.FL_ACTIVE_DOFS
         elif end_effector == 2:
-            return project_constants.FR_ACTIVE_DOFS
+            return config.FR_ACTIVE_DOFS
         elif end_effector == 3:
-            return project_constants.BR_ACTIVE_DOFS
+            return config.BR_ACTIVE_DOFS
         elif end_effector == 4:
-            return project_constants.BL_ACTIVE_DOFS
+            return config.BL_ACTIVE_DOFS
         else:
             msg = "Error finding: "+str(end_effector)
             Logger.log(msg, "FAIL")
@@ -441,13 +441,13 @@ class MotionUtils:
             Logger.log(print_str, "FAIL")
             return
         if end_effector == 4:
-            end_effector = self.robosimian.link(project_constants.BL_ACTIVE_DOFS[0])
+            end_effector = self.robosimian.link(config.BL_ACTIVE_DOFS[0])
         elif end_effector == 3:
-            end_effector = self.robosimian.link(project_constants.BR_ACTIVE_DOFS[0])
+            end_effector = self.robosimian.link(config.BR_ACTIVE_DOFS[0])
         elif end_effector == 1:
-            end_effector = self.robosimian.link(project_constants.FL_ACTIVE_DOFS[0])
+            end_effector = self.robosimian.link(config.FL_ACTIVE_DOFS[0])
         else:
-            end_effector = self.robosimian.link(project_constants.FR_ACTIVE_DOFS[0])
+            end_effector = self.robosimian.link(config.FR_ACTIVE_DOFS[0])
         return end_effector
 
     def update_torso_com_line(self):
@@ -526,9 +526,9 @@ class MotionUtils:
         if end_effector in [1, 4]:
             upright = [0, 0, -1, 0, -1, 0, -1, 0, 0]
         if xyz:
-            xyz[2] -= project_constants.END_EFFECTOR_HEIGHT
+            xyz[2] -= config.END_EFFECTOR_HEIGHT
             x_grad, y_grad = self.gradient_map.get_grad_at_world_xy(xyz[0], xyz[1])
-            x_grad /= 2*project_constants.HM_X_GRANULARITY; y_grad /= 2*project_constants.HM_Y_GRANULARITY
+            x_grad /= 2 * config.HM_X_GRANULARITY; y_grad /= 2 * config.HM_Y_GRANULARITY
             normal = [x_grad, y_grad, 1 ]
             normal_magnitude = MathUtils._3d_vector_magnitude(normal)
             if normal_magnitude > .0001:
@@ -547,7 +547,7 @@ class MotionUtils:
                 VisUtils.visualize_line(
                     xyz, [xyz[0] + normal[0], xyz[1] + normal[1], xyz[2] + normal[2]], "unit normal for {end_effector}")
             if not so3.is_rotation(R): Logger.log("Failure - calculated matrix is NOT a rotation matrix", "FAIL")
-            xyz[2] += project_constants.END_EFFECTOR_HEIGHT
+            xyz[2] += config.END_EFFECTOR_HEIGHT
             if debug:print("for end effector:",end_effector,"at xyz:",Logger.pp_list(xyz)," normal:",normal,"R:",Logger.pp_list(R))
             return R
         else:
@@ -648,8 +648,8 @@ class MotionUtils:
         end_eff_zs = np.array([fl_xyzc[2],fr_xyzc[2],bl_xyzc[2], br_xyzc[2]])
         z_endeff_ave = np.average(end_eff_zs)
         z_env = self.height_map.height_at_xy(torso_xy[0], torso_xy[1])
-        min_torso_clearance = project_constants.MIN_TORSO_CLEARANCE
-        torso_z_des = project_constants.TORSO_Z_DESIRED
+        min_torso_clearance = config.MIN_TORSO_CLEARANCE
+        torso_z_des = config.TORSO_Z_DESIRED
 
         # if debug: print "z_env:", z_env, "\tz_endeff_ave:", z_endeff_ave, "\tz_endeff_stddev:", z_endeff_stddev, "\t z_endeff_ave + min_torso_clearance:",logger.pp_double(z_endeff_ave + min_torso_clearance)
         # note: THis will cause torso z 'jumps' if the torso goes over an obstacle which goes above the torso clearance
@@ -662,7 +662,7 @@ class MotionUtils:
         return z_ret
 
     def adjust_endeff_z(self, xyz):
-        offset = project_constants.END_EFFECTOR_HEIGHT
+        offset = config.END_EFFECTOR_HEIGHT
         # z = self.height_map.height_at_xy(xyz[0], xyz[1])
         xyz_new = [xyz[0], xyz[1], xyz[2] + offset]
         return xyz_new
@@ -745,7 +745,7 @@ class MotionUtils:
         @return: SupportTriangle object
         '''
         support_tri = SupportTriangle(P, self.height_map, diag_points, name=name)
-        support_tri.enforce_safety_margin(project_constants.SUPPORT_TRIANGLE_SAFETY_MARGIN)
+        support_tri.enforce_safety_margin(config.SUPPORT_TRIANGLE_SAFETY_MARGIN)
         return support_tri
 
     def get_centroid_from_multiple_poly_intersections(self, support_triangles, add_z=None, closest_to=None):
@@ -838,11 +838,11 @@ class MotionUtils:
 
     #TODO: Update to include non level/flat end effectors
     def get_torso_range_from_end_effector(self, end_effector, at_point=None, yaw_rads=None):
-        R = project_constants.END_AFFECTOR_RADIUS_TO_SHOULDER
-        S = project_constants.SHOULDER_TORSO_XY_EUCLIDEAN_DIF
+        R = config.END_AFFECTOR_RADIUS_TO_SHOULDER
+        S = config.SHOULDER_TORSO_XY_EUCLIDEAN_DIF
         yaw = self.get_current_torso_yaw_rads()
         if yaw_rads: yaw = yaw_rads
-        psi = project_constants.SHOULDER_TORSO_PSI_RADS
+        psi = config.SHOULDER_TORSO_PSI_RADS
         shoulder_link = self.get_shoulder_from_end_effector(end_effector)
         shoulder_world_xyz = shoulder_link.getWorldPosition([0, 0, 0])
         if end_effector == 1:
@@ -882,7 +882,7 @@ class MotionUtils:
             delta_y_max = R * np.sin(theta) + S * np.sin(yaw + psi)
             delta_x_max = R * np.cos(theta) + S * np.cos(yaw + psi)
         r = np.sqrt(delta_x_max ** 2 + delta_y_max ** 2)
-        return project_constants.END_RANGE_MULTIPLIER * r
+        return config.END_RANGE_MULTIPLIER * r
 
     def get_torso_R_from_yaw_rad(self, yaw_rad):
         axis_angle = ([0, 0, 1], yaw_rad)

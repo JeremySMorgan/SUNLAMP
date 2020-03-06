@@ -6,7 +6,7 @@ from src import system_runner
 from src.utils.data_objects.optimization_output import OptimizationResults
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 from src.utils.logger import Logger
-from src.utils import project_constants
+from src.utils import config
 
 
 class HyperparameterOptimizer:

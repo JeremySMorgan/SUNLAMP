@@ -17,7 +17,7 @@ from src.motion.motion_utils import MotionUtils, Constraints
 from src.utils.logger import Logger as Lg
 from src.utils.math_utils import MathUtils
 from src.utils.vis_utils import VisUtils
-from src.utils import project_constants
+from src.utils import config
 
 
 def end_config_exhaustive_search(
@@ -94,13 +94,13 @@ def end_config_exhaustive_search(
                             lowest_cost_config = config
                             z_offset_end = offset
 
-                            if debug:
+                            if config.MPLANNER_VERBOSITY >= 4:
                                 print(
                                     f"end_config_exhaustive_search(): lowest cost config found ({possible_configs_found} total), cost: {round(cost, 3)}\t"
                                     f" ratio: {round(ratio, 3)}, break early ratio: {round(break_early_min_cost_ratio, 3)}")
 
                         if ratio < break_early_min_cost_ratio:
-                            if debug:
+                            if config.MPLANNER_VERBOSITY >= 3:
                                 print(
                                     f"ratio {round(ratio, 3)} < break early ratio: {round(break_early_min_cost_ratio, 3)}, exiting")
                             break_early = True
@@ -119,7 +119,7 @@ def end_config_exhaustive_search(
         y = y_min
         x += x_delta
 
-    if debug:
+    if config.MPLANNER_VERBOSITY >= 3:
         print(f"end_config_exhaustive_search() finished in {Lg.log_bold(round(time.time() - t_start, 2))} seconds, {possible_configs_found} end configs found")
 
     return lowest_cost_config, lowest_cost_config_c, search_cnt, time.time() - start_t, x, y, z_offset_end, break_early
@@ -168,7 +168,9 @@ class ConfigSpacePlanner(MotionUtils):
 
     max_joint_angle_change_deg = 2.5
     max_allowed_joint_angle_change = np.deg2rad(max_joint_angle_change_deg)
-    print("\nmax_allowed_joint_angle_change:", round(max_allowed_joint_angle_change, 4))
+
+    if config.MPLANNER_VERBOSITY >= 3:
+        print("\nmax_allowed_joint_angle_change:", round(max_allowed_joint_angle_change, 4))
 
     max_torso_translation_dist = .015
     max_torso_rotation_deg = 1.5
@@ -286,7 +288,7 @@ class ConfigSpacePlanner(MotionUtils):
         range_circles = constraint_obj.get_range_circles()
         support_tri: SupportTriangle = constraint_obj.get_support_triangles()[0]
         torso_x_est, torso_y_est, yaw_rads_est_at_q = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[stance_idx])
-        nominal_q_joint_angles = project_constants.NOMINAL_CONFIG[6:]
+        nominal_q_joint_angles = config.NOMINAL_CONFIG[6:]
         support_tri_incenter_xy = [support_tri.incenterx, support_tri.incentery]
         visitems_to_clear = []
 
@@ -302,7 +304,7 @@ class ConfigSpacePlanner(MotionUtils):
 
         end_config_iktargets = [fl_obj, fr_obj, bl_obj, br_obj]
 
-        nominal_config_cp = project_constants.NOMINAL_CONFIG[:]
+        nominal_config_cp = config.NOMINAL_CONFIG[:]
         nominal_config_cp[0], nominal_config_cp[1] = torso_x_est, torso_y_est
         nominal_config_cp[5] = yaw_rads_est_at_q
 
@@ -382,7 +384,7 @@ class ConfigSpacePlanner(MotionUtils):
 
                         cost = get_config_cost(q)
                         if len(min_costs) == 0:
-                            if debug:
+                            if config.MPLANNER_VERBOSITY >= 3:
                                 print("randomized_centered_search() Found valid end config, with heuristic cost:", Lg.pp_double(cost[0]))
                             initial_lowestcost = cost[0]
                             heappush(function_heap, cost)
@@ -395,13 +397,13 @@ class ConfigSpacePlanner(MotionUtils):
                                 ratio = cost[0] / initial_lowestcost
 
                                 if ratio < mincost_break_threshold:
-                                    if debug:
+                                    if config.MPLANNER_VERBOSITY >= 3:
                                         print(f"randomized_centered_search() sample {int(i)}: new lowest cost: {round(cost[0], 3)} ratio: "
                                               f"{Lg.pp_double(ratio)} -> breaking")
                                     broke_early = True
                                     break
                                 else:
-                                    if debug:
+                                    if config.MPLANNER_VERBOSITY >= 3:
                                         print(f"randomized_centered_search() sample {int(i)}: new lowest cost: {round(cost[0], 3)} ratio: {Lg.pp_double(ratio)}")
             if debug and broke_early:
                 print("Breaking early from end config sampling. ", len(function_heap), "valid end configs found")
@@ -433,7 +435,7 @@ class ConfigSpacePlanner(MotionUtils):
             if ignore_dist_to_nominal_z:
                 c -= c_dist_to_nominal_z
 
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_config_cost(stance) hash(stance): {str(hash(tuple(config)))[0:8]}")
                 print(f"  dist_from_nominal_q: {round(float(dist_from_nominal_q_joint_angles), 3)}\t cost: {round(c_joint_dist_from_nominal_,3)}")
                 print(f"  dist_to_incenter: {round(dist_to_incenter, 3)}\t cost: {round(c_dist_to_incenter,3)}")
@@ -618,7 +620,7 @@ class ConfigSpacePlanner(MotionUtils):
                 #     self.robosimian.setConfig(bias_config)
                 #     res = ik.solve(end_config_iktargets, activeDofs=project_constants.ACTIVE_DOFS)
                 #     q = self.robosimian.getConfig()
-                #     q_valid = config_valid(q, debug=False)
+                #     q_valid = config_valid(q, project_constants.MPLANNER_VERBOSITY >= 3=False)
                 #     # if debug:
                 #     #     dist = MathUtils._2d_euclidian_distance(q, torso_xy_pt)
                 #     #     print(f"get_endconfigs() preset_loc_{i} ik.solve()\tres: {Lg.log_boolean(res)}, "
@@ -680,11 +682,11 @@ class ConfigSpacePlanner(MotionUtils):
                     VisUtils.visualize_xy_point(lowest_cost_config, f"grid_search_xy", height=.35, color=VisUtils.GREEN)
                     visitems_to_clear.append(f"grid_search_xy")
 
-        num_samples = project_constants.END_CONFIG_SAMPLE_COUNT
+        num_samples = config.END_CONFIG_SAMPLE_COUNT
 
         if run_probabilistic_search:
 
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running randomized search centered at intersection centroid")
             max_dx = .3
             max_dy = .3
@@ -696,7 +698,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running randomized search centered at "
                       f"support tri, line from incenter to moving leg intersection")
             z_des = self.get_torso_z_des_from_xy(support_tri_intersection_ptxy, curr_stance, debug=debug)
@@ -706,7 +708,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, rerunning previous search at lower z")
             support_tri_intersection_ptxyz[2] -= .15
             centered_search_res = randomized_centered_search(
@@ -714,7 +716,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, rerunning previous search at higher z")
             support_tri_intersection_ptxyz[2] += .3
             centered_search_res = randomized_centered_search(
@@ -723,7 +725,7 @@ class ConfigSpacePlanner(MotionUtils):
                 return_configs += [centered_search_res]
 
         if run_exaustive_grid_search:
-            if debug:
+            if config.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running exhaustive grid search")
 
             p1 = support_tri.points[0]
@@ -760,7 +762,7 @@ class ConfigSpacePlanner(MotionUtils):
 
             if broke_early:
 
-                if debug:
+                if config.MPLANNER_VERBOSITY >= 3:
                     print(f"Valid config found through exaustive_grid_search with x, y deltas: {round(x_delta, 3)}, {round(y_delta, 3)}")
 
                 x_delta = .01
@@ -777,7 +779,7 @@ class ConfigSpacePlanner(MotionUtils):
                 z_offsets = [-2*z_delta, -3*z_delta, z_delta, 2*z_delta,  3*z_delta]
 
             for z_offset in z_offsets:
-                if debug:
+                if config.MPLANNER_VERBOSITY >= 3:
                     print(f"  searching at z_des + {round(z_offset, 3)}")
 
                 lowest_cost_config,  _, _, _, _, _, _, _ = end_config_exhaustive_search(
@@ -788,7 +790,7 @@ class ConfigSpacePlanner(MotionUtils):
                     get_config_cost, debug=search_debug, ignore_dist_to_nominal_z_cost=True)
                 if lowest_cost_config:
                     return_configs += [lowest_cost_config]
-                    if debug:
+                    if config.MPLANNER_VERBOSITY >= 3:
                         print(f"found valid config, {len(return_configs)} total return configs")
 
                 # With Specified Torso Rotation
@@ -800,11 +802,11 @@ class ConfigSpacePlanner(MotionUtils):
                     with_rotation_R=torso_R_des, ignore_dist_to_nominal_z_cost=True)
                 if lowest_cost_config:
                     return_configs += [lowest_cost_config]
-                    if debug:
+                    if config.MPLANNER_VERBOSITY >= 3:
                         print(f"found valid config, {len(return_configs)} total return configs")
 
             else:
-                if debug:
+                if config.MPLANNER_VERBOSITY >= 3:
                     print("0 valid configs with coarse exaustive search")
 
         return_confg_costs = []
@@ -944,7 +946,9 @@ class ConfigSpacePlanner(MotionUtils):
 
         return q_arc, arc_failed, time.time() - start_t
 
-    def plan_legstep(self, r_pose, constraint_obj, stance_idx: int, debug=False, visualize=False, only_use_sbl=False):
+    def plan_legstep(self, r_pose, constraint_obj, stance_idx: int, visualize=False, only_use_sbl=False):
+
+        debug = config.MPLANNER_VERBOSITY >= 3
 
         return_configs = []
 
@@ -1046,7 +1050,7 @@ class ConfigSpacePlanner(MotionUtils):
 
         pre_sleep_t = 0.0
         q_arc_sleep = 0.0
-        ik_arcdebug = False
+        ik_arcdebug = config.MPLANNER_VERBOSITY >= 4
 
         if only_use_sbl:
             Lg.log("Warning: Only use SBL enabled", "WARNING")
@@ -1182,7 +1186,7 @@ class ConfigSpacePlanner(MotionUtils):
             end_config = end_configs[end_config_i]
             t_start = time.time()
             try:
-                algo = project_constants.KLAMPT_MPLANNER_ALGO
+                algo = config.KLAMPT_MPLANNER_ALGO
                 settings = {'type': algo, 'perturbationRadius': 0.5, 'bidirectional': 1, 'shortcut': 0, 'restart': 0,
                             'restartTermCond': "{foundSolution:1, maxIters:1000}"}
                 plan = cspace.MotionPlan(space)
@@ -1222,21 +1226,21 @@ class ConfigSpacePlanner(MotionUtils):
                 if discretized_path_valid:
                     plan.close()
                     if debug:
-                        print(f"Built valid path with {project_constants.KLAMPT_MPLANNER_ALGO} "
+                        print(f"Built valid path with {config.KLAMPT_MPLANNER_ALGO} "
                               f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
                     return discretized_path
 
                 if debug:
-                    print(f"discretizedPath for path built by {project_constants.KLAMPT_MPLANNER_ALGO} "
+                    print(f"discretizedPath for path built by {config.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} is invalid. search and discretization completed "
                           f"in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             else:
                 if debug:
-                    print(f"Failed to build a path with {project_constants.KLAMPT_MPLANNER_ALGO} "
+                    print(f"Failed to build a path with {config.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             plan.close()
             if debug:
-                print(f"{project_constants.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
+                print(f"{config.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
                       f"{len(end_configs)} in {Lg.bold_txt(round(time.time()-t_start,2))} seconds")
         return False
 
@@ -1258,9 +1262,9 @@ class ConfigSpacePlanner(MotionUtils):
         moving_endeff_xyzRf = self.get_end_effector_current_xyzRs()[moving_leg - 1]
         moving_endeff_xyzR0 = r_pose.get_moving_leg_xyzR(moving_leg)
         max_obst_height_in_path = -np.inf
-        r_world = project_constants.HOOK_LENGTH + project_constants.END_AFFECTOR_RADIUS
+        r_world = config.HOOK_LENGTH + config.END_AFFECTOR_RADIUS
         for i in range(50):
-            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, project_constants.STEP_HEIGHT)[0:2]
+            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, config.STEP_HEIGHT)[0:2]
             tallest_obs_height = self.height_map.max_in_radius_r_centered_at_xy(xy_i[0], xy_i[1], r_world)
             max_obst_height_in_path = max(max_obst_height_in_path, tallest_obs_height)
 
@@ -1331,7 +1335,7 @@ class ConfigSpacePlanner(MotionUtils):
                 imax, config_valid, arc_ik_targets, start_config, linear_torso_motion,
                 leg_motion_fn=self.get_parabolic_mid_motion_xyzR, moving_leg_xyzR0=moving_endeff_xyzR0,
                 moving_leg_xyzRf=moving_endeff_xyzRf, moving_end_effector=moving_end_effector,
-                step_height=project_constants.STEP_HEIGHT,
+                step_height=config.STEP_HEIGHT,
                 debug=q_arc_debug, sleep_t=q_arc_sleep
             )
 
@@ -1422,7 +1426,9 @@ class ConfigSpacePlanner(MotionUtils):
 
         return False
 
-    def plan_torsoshift(self, r_pose, constraint_obj: Constraints, stance_idx, debug=False, visualize=False, only_use_sbl=False):
+    def plan_torsoshift(self, r_pose, constraint_obj: Constraints, stance_idx, visualize=False, only_use_sbl=False):
+
+        debug = config.MPLANNER_VERBOSITY >= 3
 
         # Function wide variables
         fl_xyz, fr_xyz, br_xyz, bl_xyz = r_pose.fl, r_pose.fr, r_pose.br, r_pose.bl
@@ -1434,8 +1440,9 @@ class ConfigSpacePlanner(MotionUtils):
 
         self.debug_visualize_stance(stance_idx, constraint_obj, visualize=visualize, debug=debug)
 
-        print("start_config =",start_config)
-        print("  ", ConfigSpacePlanner.configs_j1s(start_config))
+        if debug:
+            print("start_config =",start_config)
+            print("  ", ConfigSpacePlanner.configs_j1s(start_config))
 
         # Get MPlanner IK Constrains
         m_planner_ik_constraints = [fl_obj, fr_obj, br_obj, bl_obj]

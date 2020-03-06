@@ -1,9 +1,17 @@
 import datetime
 import numpy as np
 import inspect
-
+from src.utils import config
 
 class Logger:
+
+    class_logging_levels = [
+        config.SYS_RUNNER_VERBOSITY,
+        config.HL_TRAJ_VERBOSITY,
+        config.STEPSEQ_VERBOSITY,
+        config.MPLANNER_VERBOSITY,
+        config.CLOOP_VERBOSITY
+    ]
 
     class colors:
         '''Colors class:
@@ -73,7 +81,10 @@ class Logger:
 
     @staticmethod
     def bold_txt(msg, color="STANDARD"):
-        return Logger.COLORS[color]["value"] + Logger.COLORS["BOLD"]["value"] + str(msg) + Logger.COLORS["ENDC"]["value"]
+        if not config.LOGGER_COLORS_ENABLED:
+            return str(msg)
+        else:
+            return Logger.COLORS[color]["value"] + Logger.COLORS["BOLD"]["value"] + str(msg) + Logger.COLORS["ENDC"]["value"]
 
     @staticmethod
     def log_boolean(bool, invert=False, msg=None):
@@ -95,14 +106,23 @@ class Logger:
             # return logger.COLORS[fail]["value"] + "False" + logger.COLORS["ENDC"]["value"]
         else:
             pre = ""
-        return pre + msg + Logger.COLORS["ENDC"]["value"]
+
+        if config.LOGGER_COLORS_ENABLED:
+            return pre + msg + Logger.COLORS["ENDC"]["value"]
+        return msg
 
     @staticmethod
     def log_bold(s):
-        return Logger.styled_text(str(s), "BOLD")
+
+        if not config.LOGGER_COLORS_ENABLED:
+            return str(s)
+        else:
+            return Logger.styled_text(str(s), "BOLD")
 
     @staticmethod
     def fail(msg):
+        if not config.LOGGER_COLORS_ENABLED:
+            return msg
         return Logger.COLORS["FAIL"]["value"]+msg+Logger.COLORS["ENDC"]["value"]
 
     @staticmethod
@@ -111,12 +131,65 @@ class Logger:
 
     @staticmethod
     def styled_text(msg, style):
-        return Logger.COLORS[style.upper()]["value"]+msg+Logger.COLORS["ENDC"]["value"]
+        if config.LOGGER_COLORS_ENABLED:
+            return Logger.COLORS[style.upper()]["value"] + msg + Logger.COLORS["ENDC"]["value"]
+        return msg
 
     @staticmethod
-    def log(message, color):
-        # type: (str, str) -> None
-        # [03/Apr/2017 18:37:10]
+    def log_msg_tf(class_id, msg_type):
+
+        if class_id < 0 or msg_type < 0:
+            return True
+
+        logging_level = Logger.class_logging_levels[class_id]
+
+        # No output
+        if logging_level == 0:
+            return False
+
+        # only fatal errors
+        if logging_level == 1:
+            if msg_type == 1:
+                return True
+            return False
+
+        # fatal errors + initialization info
+        if logging_level == 2:
+            if msg_type <= 1:
+                return True
+            return False
+
+        # 3 - fatal errors + initialization info + general info/status
+        if logging_level == 3:
+            if msg_type <= 2:
+                return True
+            return False
+
+        # 3 - fatal errors + initialization info + general info/status + detailed info
+        if logging_level == 4:
+            return True
+
+        print("unrecognized logging_level:",logging_level,"\t for class:",class_id)
+        return True
+
+    @staticmethod
+    def log(message, color=None, class_id=-1, msg_type=-1):
+
+        # class_id's:
+        # 0 - system_runner
+        # 1 - high_level_trajectory_generator.py
+        # 2 - step_sequence_generator.py
+        # 3 - motion_planner
+        # 4 - control_loop
+
+        # msg_types:
+        # 0: initialization info
+        # 1: fatal error
+        # 2: info
+        # 3: detailed info
+
+        if not Logger.log_msg_tf(class_id, msg_type):
+            return
 
         stack = inspect.stack()
         use_stack = True
@@ -131,16 +204,20 @@ class Logger:
             caller = class_+"."+method_+"()"
 
         time = datetime.datetime.now()
-        if color not in Logger.COLORS:
+        if color not in Logger.COLORS or color is None:
             color = Logger.COLORS.get("STANDARD").get("value")
-        prefix = "["+str(time.day)+"/"+str(time.month)+ "/" + str(time.year) + " " + str(time.hour) + ":" + str(time.minute) + ":" + str(time.second) +  " ] "
-        prefix = prefix +  Logger.COLORS["BOLD"]["value"]+ Logger.COLORS["UNDERLINE"]["value"]+ caller+ Logger.COLORS["ENDC"]["value"]+ ":"
 
-        try:
-            print_Str = prefix + ""+Logger.COLORS[color]["value"] + " "+message + " "+Logger.COLORS["ENDC"]["value"]
-        except KeyError:
-            print_Str = prefix + "" + Logger.COLORS["STANDARD"]["value"] + " " + message + " " + Logger.COLORS["ENDC"]["value"]
-        print(print_Str)
+        prefix = "["+str(time.day)+"/"+str(time.month)+ "/" + str(time.year) + " " + str(time.hour) + ":" + str(time.minute) + ":" + str(time.second) +  " ] "
+
+        if not config.LOGGER_COLORS_ENABLED:
+            print(prefix + "" + caller + ": " + message)
+        else:
+            prefix = prefix + Logger.COLORS["BOLD"]["value"]+ Logger.COLORS["UNDERLINE"]["value"]+ caller+ Logger.COLORS["ENDC"]["value"]+ ":"
+            try:
+                print_Str = prefix + ""+Logger.COLORS[color]["value"] + " "+message + " "+Logger.COLORS["ENDC"]["value"]
+            except KeyError:
+                print_Str = prefix + "" + Logger.COLORS["STANDARD"]["value"] + " " + message + " " + Logger.COLORS["ENDC"]["value"]
+            print(print_Str)
 
     @staticmethod
     def log_hash(x):
@@ -150,7 +227,10 @@ class Logger:
     def pp_list(input_list_, round_amt=3):
         ret = "[ "
         if input_list_ is None:
+            if not config.LOGGER_COLORS_ENABLED:
+                return "None"
             return Logger.COLORS["BOLD"]["value"] + "None" + Logger.COLORS["ENDC"]["value"]
+
         for i in input_list_:
             if type(i) == list or type(i) == tuple:
                 ret += Logger.pp_list(i)    # recursion, lfg
