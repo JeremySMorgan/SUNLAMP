@@ -94,13 +94,13 @@ def end_config_exhaustive_search(
                             lowest_cost_config = config
                             z_offset_end = offset
 
-                            if config.MPLANNER_VERBOSITY >= 4:
+                            if project_constants.MPLANNER_VERBOSITY >= 4:
                                 print(
                                     f"end_config_exhaustive_search(): lowest cost config found ({possible_configs_found} total), cost: {round(cost, 3)}\t"
                                     f" ratio: {round(ratio, 3)}, break early ratio: {round(break_early_min_cost_ratio, 3)}")
 
                         if ratio < break_early_min_cost_ratio:
-                            if config.MPLANNER_VERBOSITY >= 3:
+                            if project_constants.MPLANNER_VERBOSITY >= 3:
                                 print(
                                     f"ratio {round(ratio, 3)} < break early ratio: {round(break_early_min_cost_ratio, 3)}, exiting")
                             break_early = True
@@ -119,7 +119,7 @@ def end_config_exhaustive_search(
         y = y_min
         x += x_delta
 
-    if config.MPLANNER_VERBOSITY >= 3:
+    if project_constants.MPLANNER_VERBOSITY >= 3:
         print(f"end_config_exhaustive_search() finished in {Lg.log_bold(round(time.time() - t_start, 2))} seconds, {possible_configs_found} end configs found")
 
     return lowest_cost_config, lowest_cost_config_c, search_cnt, time.time() - start_t, x, y, z_offset_end, break_early
@@ -288,7 +288,7 @@ class ConfigSpacePlanner(MotionUtils):
         range_circles = constraint_obj.get_range_circles()
         support_tri: SupportTriangle = constraint_obj.get_support_triangles()[0]
         torso_x_est, torso_y_est, yaw_rads_est_at_q = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[stance_idx])
-        nominal_q_joint_angles = config.NOMINAL_CONFIG[6:]
+        nominal_q_joint_angles = project_constants.NOMINAL_CONFIG[6:]
         support_tri_incenter_xy = [support_tri.incenterx, support_tri.incentery]
         visitems_to_clear = []
 
@@ -304,7 +304,7 @@ class ConfigSpacePlanner(MotionUtils):
 
         end_config_iktargets = [fl_obj, fr_obj, bl_obj, br_obj]
 
-        nominal_config_cp = config.NOMINAL_CONFIG[:]
+        nominal_config_cp = project_constants.NOMINAL_CONFIG[:]
         nominal_config_cp[0], nominal_config_cp[1] = torso_x_est, torso_y_est
         nominal_config_cp[5] = yaw_rads_est_at_q
 
@@ -384,7 +384,7 @@ class ConfigSpacePlanner(MotionUtils):
 
                         cost = get_config_cost(q)
                         if len(min_costs) == 0:
-                            if config.MPLANNER_VERBOSITY >= 3:
+                            if project_constants.MPLANNER_VERBOSITY >= 3:
                                 print("randomized_centered_search() Found valid end config, with heuristic cost:", Lg.pp_double(cost[0]))
                             initial_lowestcost = cost[0]
                             heappush(function_heap, cost)
@@ -397,13 +397,13 @@ class ConfigSpacePlanner(MotionUtils):
                                 ratio = cost[0] / initial_lowestcost
 
                                 if ratio < mincost_break_threshold:
-                                    if config.MPLANNER_VERBOSITY >= 3:
+                                    if project_constants.MPLANNER_VERBOSITY >= 3:
                                         print(f"randomized_centered_search() sample {int(i)}: new lowest cost: {round(cost[0], 3)} ratio: "
                                               f"{Lg.pp_double(ratio)} -> breaking")
                                     broke_early = True
                                     break
                                 else:
-                                    if config.MPLANNER_VERBOSITY >= 3:
+                                    if project_constants.MPLANNER_VERBOSITY >= 3:
                                         print(f"randomized_centered_search() sample {int(i)}: new lowest cost: {round(cost[0], 3)} ratio: {Lg.pp_double(ratio)}")
             if debug and broke_early:
                 print("Breaking early from end config sampling. ", len(function_heap), "valid end configs found")
@@ -435,7 +435,7 @@ class ConfigSpacePlanner(MotionUtils):
             if ignore_dist_to_nominal_z:
                 c -= c_dist_to_nominal_z
 
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_config_cost(stance) hash(stance): {str(hash(tuple(config)))[0:8]}")
                 print(f"  dist_from_nominal_q: {round(float(dist_from_nominal_q_joint_angles), 3)}\t cost: {round(c_joint_dist_from_nominal_,3)}")
                 print(f"  dist_to_incenter: {round(dist_to_incenter, 3)}\t cost: {round(c_dist_to_incenter,3)}")
@@ -682,11 +682,11 @@ class ConfigSpacePlanner(MotionUtils):
                     VisUtils.visualize_xy_point(lowest_cost_config, f"grid_search_xy", height=.35, color=VisUtils.GREEN)
                     visitems_to_clear.append(f"grid_search_xy")
 
-        num_samples = config.END_CONFIG_SAMPLE_COUNT
+        num_samples = project_constants.END_CONFIG_SAMPLE_COUNT
 
         if run_probabilistic_search:
 
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running randomized search centered at intersection centroid")
             max_dx = .3
             max_dy = .3
@@ -698,7 +698,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running randomized search centered at "
                       f"support tri, line from incenter to moving leg intersection")
             z_des = self.get_torso_z_des_from_xy(support_tri_intersection_ptxy, curr_stance, debug=debug)
@@ -708,7 +708,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, rerunning previous search at lower z")
             support_tri_intersection_ptxyz[2] -= .15
             centered_search_res = randomized_centered_search(
@@ -716,7 +716,7 @@ class ConfigSpacePlanner(MotionUtils):
             if centered_search_res:
                 return_configs += [centered_search_res]
 
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, rerunning previous search at higher z")
             support_tri_intersection_ptxyz[2] += .3
             centered_search_res = randomized_centered_search(
@@ -725,7 +725,7 @@ class ConfigSpacePlanner(MotionUtils):
                 return_configs += [centered_search_res]
 
         if run_exaustive_grid_search:
-            if config.MPLANNER_VERBOSITY >= 3:
+            if project_constants.MPLANNER_VERBOSITY >= 3:
                 print(f"get_endconfigs(): {len(return_configs)} configs saved, running exhaustive grid search")
 
             p1 = support_tri.points[0]
@@ -762,7 +762,7 @@ class ConfigSpacePlanner(MotionUtils):
 
             if broke_early:
 
-                if config.MPLANNER_VERBOSITY >= 3:
+                if project_constants.MPLANNER_VERBOSITY >= 3:
                     print(f"Valid config found through exaustive_grid_search with x, y deltas: {round(x_delta, 3)}, {round(y_delta, 3)}")
 
                 x_delta = .01
@@ -779,7 +779,7 @@ class ConfigSpacePlanner(MotionUtils):
                 z_offsets = [-2*z_delta, -3*z_delta, z_delta, 2*z_delta,  3*z_delta]
 
             for z_offset in z_offsets:
-                if config.MPLANNER_VERBOSITY >= 3:
+                if project_constants.MPLANNER_VERBOSITY >= 3:
                     print(f"  searching at z_des + {round(z_offset, 3)}")
 
                 lowest_cost_config,  _, _, _, _, _, _, _ = end_config_exhaustive_search(
@@ -790,7 +790,7 @@ class ConfigSpacePlanner(MotionUtils):
                     get_config_cost, debug=search_debug, ignore_dist_to_nominal_z_cost=True)
                 if lowest_cost_config:
                     return_configs += [lowest_cost_config]
-                    if config.MPLANNER_VERBOSITY >= 3:
+                    if project_constants.MPLANNER_VERBOSITY >= 3:
                         print(f"found valid config, {len(return_configs)} total return configs")
 
                 # With Specified Torso Rotation
@@ -802,11 +802,11 @@ class ConfigSpacePlanner(MotionUtils):
                     with_rotation_R=torso_R_des, ignore_dist_to_nominal_z_cost=True)
                 if lowest_cost_config:
                     return_configs += [lowest_cost_config]
-                    if config.MPLANNER_VERBOSITY >= 3:
+                    if project_constants.MPLANNER_VERBOSITY >= 3:
                         print(f"found valid config, {len(return_configs)} total return configs")
 
             else:
-                if config.MPLANNER_VERBOSITY >= 3:
+                if project_constants.MPLANNER_VERBOSITY >= 3:
                     print("0 valid configs with coarse exaustive search")
 
         return_confg_costs = []
@@ -1036,7 +1036,7 @@ class ConfigSpacePlanner(MotionUtils):
                 i += 1
             if target_config is None:
                 if debug:
-                    Lg.log("Start config was invalid, unable to find nearby valid config. Exiting", "FAIL")
+                    Lg.log("Start config was invalid, unable to find nearby valid project_constants. Exiting", "FAIL")
                 return False
             if debug:
                 Lg.log(f"Warning: start config was infeasible, found new config with torso translated < {max_torso_translation}"
@@ -1503,7 +1503,7 @@ class ConfigSpacePlanner(MotionUtils):
 
             if target_config is None:
                 if debug:
-                    Lg.log("Unable to find a valid start config. Exiting", "FAIL")
+                    Lg.log("Unable to find a valid start project_constants. Exiting", "FAIL")
                 return False
 
             if debug:

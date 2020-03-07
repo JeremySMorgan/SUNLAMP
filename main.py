@@ -18,7 +18,7 @@ def main():
     for v in dir(project_constants):
         if v[0] == '_':
             continue
-        s = eval(f'config.{v}')
+        s = eval(f'project_constants.{v}')
         print('  {:25}\t{}'.format(v, s))
     print()
 
