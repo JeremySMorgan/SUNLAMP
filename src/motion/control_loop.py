@@ -9,7 +9,7 @@ from src.utils.py_utils import PyUtils
 from src.motion.motion_planner import MPlannerResults
 from klampt import Simulator
 import _thread
-from src.utils import config
+from src.utils import project_constants
 
 class ControlLoop(MotionUtils):
 
@@ -72,7 +72,7 @@ class ControlLoop(MotionUtils):
             self.physics_sim_world = execution_world
             self.sim = Simulator(execution_world)
             self.controller = self.sim.controller(0)
-            self.controller.setRate(config.PHYSICS_SIM_CONTROLLER_DT)
+            self.controller.setRate(project_constants.PHYSICS_SIM_CONTROLLER_DT)
 
             self.queue_counter = 0
             self.queue_every_kth = 5
@@ -87,17 +87,17 @@ class ControlLoop(MotionUtils):
                 i += 1
                 print(i, round(time.time() - last_t, 2))
                 last_t = time.time()
-                self.sim.simulate(config.PHYSICS_SIM_CONTROLLER_DT)
+                self.sim.simulate(project_constants.PHYSICS_SIM_CONTROLLER_DT)
                 self.sim.updateWorld()
                 f.writelines([str(self.sim.getTime()) + " " + str(self.controller.getSensedConfig())+"\n"])
-                time.sleep(config.PHYSICS_SIM_CONTROLLER_DT)
+                time.sleep(project_constants.PHYSICS_SIM_CONTROLLER_DT)
                 if i == 20000:
                     break
         # self.sim_logger.close()
 
     def shutdown(self):
         self.thread_alive = False
-        time.sleep(config.CONTROLLER_DT + .01)
+        time.sleep(project_constants.CONTROLLER_DT + .01)
 
     def run(self):
         '''
@@ -146,14 +146,14 @@ class ControlLoop(MotionUtils):
         else:
             self.robot_pose = self.get_robot_pose_from_stance(self.curr_stance, with_end_effector_Rs=True, visualize_normal=False)
             if not self.IKSolverUtil.set_pose_w_R(self.robot_pose):
-                if config.CLOOP_VERBOSITY >= 2:
+                if project_constants.CLOOP_VERBOSITY >= 2:
                     Logger.log("Initial IK solver failed.", "FAIL")
 
         t_start = time.time()
         self.start_time = t_start
         run_loop = True
 
-        if config.CLOOP_VERBOSITY >= 2:
+        if project_constants.CLOOP_VERBOSITY >= 2:
             print(f"Starting control loop. {len(self.stance_path)} total states")
 
         while 1:
@@ -183,7 +183,7 @@ class ControlLoop(MotionUtils):
 
                 if cloop_res == ControlLoop.ERROR:
 
-                    if config.CLOOP_VERBOSITY >= 1:
+                    if project_constants.CLOOP_VERBOSITY >= 1:
                         Logger.log("Control loop error", "FAIL")
 
                     current_torso_xyz = self.get_current_torso_xyz_yaw_deg()
@@ -199,7 +199,7 @@ class ControlLoop(MotionUtils):
                     return output_obj
 
                 elif cloop_res == ControlLoop.DONE:
-                    if config.CLOOP_VERBOSITY >= 2:
+                    if project_constants.CLOOP_VERBOSITY >= 2:
                         Logger.log("Done", "OKGREEN")
 
                     current_torso_xyz = self.get_current_torso_xyz_yaw_deg()
@@ -223,7 +223,7 @@ class ControlLoop(MotionUtils):
             run_loop = True
 
             if not self.disable_sleep:
-                time.sleep(config.CONTROLLER_DT)
+                time.sleep(project_constants.CONTROLLER_DT)
 
     def write_config_to_execution_world_robot(self, config: list):
         if self.execution_world:
@@ -252,7 +252,7 @@ class ControlLoop(MotionUtils):
             # Start of torso shift
             if self.mid_torso_shift_qs is None:
 
-                if config.CLOOP_VERBOSITY >= 3:
+                if project_constants.CLOOP_VERBOSITY >= 3:
                     print(f"\n\n____________________________\n{PyUtils.format_time(time.time() - self.start_time)}:  Starting torso shift\n ")
 
                 # Update com constraints
@@ -296,7 +296,7 @@ class ControlLoop(MotionUtils):
 
             if self.mid_step_qs is None:
 
-                if config.CLOOP_VERBOSITY >= 3:
+                if project_constants.CLOOP_VERBOSITY >= 3:
                     print("\n\n___________________\n  Starting leg step\n")
 
                 self.mid_step_qs = self.MotionPlanner.plan_legstep(

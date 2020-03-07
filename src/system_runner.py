@@ -5,7 +5,7 @@ import pickle as pickle
 import time
 import os
 import sys
-from src.utils import config
+from src.utils import project_constants
 from src.generators.footstep_costmap_generator import FootstepCostMapGenerator
 from src.generators.conv_costmap_generator import ConvolutionCostMapGenerator
 from src.generators.step_sequence_planner import  StepSequencePlanner
@@ -88,7 +88,7 @@ class SystemRunner:
 
         self.results = SystemRunnerResults()
         self.results.world_name = None
-        self.results.project_constants = config
+        self.results.project_constants = project_constants
 
         self.planning_world = WorldModel()
         self.rposer = None
@@ -105,8 +105,8 @@ class SystemRunner:
         self.fs_seq_obj = None
         self.control_loop_output_obj = None
 
-        self.hl_traj_max_runtime = config.HL_TRAJ_MAX_RUNTIME
-        self.step_seq_max_runtime =  config.STEPSEQ_MAX_RUNTIME
+        self.hl_traj_max_runtime = project_constants.HL_TRAJ_MAX_RUNTIME
+        self.step_seq_max_runtime =  project_constants.STEPSEQ_MAX_RUNTIME
 
         self.physics_sim_enabled = False
         self.execution_world_enabled = False
@@ -150,7 +150,7 @@ class SystemRunner:
         if not self.planning_world.readFile(SystemRunner.robot_file):
             raise RuntimeError("Unable to load robot model")
 
-        q = config.NOMINAL_CONFIG
+        q = project_constants.NOMINAL_CONFIG
         q[0] = self.xy_yaw0[0]
         q[1] = self.xy_yaw0[1]
         q[5] = self.xy_yaw0[2]
@@ -199,8 +199,8 @@ class SystemRunner:
         self.HM_X_END = inbound_xrange[1]
         self.HM_Y_START = inbound_yrange[0]
         self.HM_Y_END = inbound_yrange[1]
-        config.HM_Y_GRANULARITY = y_vars[2]
-        config.HM_X_GRANULARITY = x_vars[2]
+        project_constants.HM_Y_GRANULARITY = y_vars[2]
+        project_constants.HM_X_GRANULARITY = x_vars[2]
 
         self.hm_obj = self.get_saved_object(self.hm_type)
         if self.hm_obj is None:
@@ -214,7 +214,7 @@ class SystemRunner:
             )
 
             pcloud_parser.add_hm_to_klampt_vis(self.pcloud_fname)
-            q = config.NOMINAL_CONFIG
+            q = project_constants.NOMINAL_CONFIG
             q[0] = self.xy_yaw0[0]
             q[1] = self.xy_yaw0[1]
             q[2] = self.xy_yaw0[2]
@@ -463,7 +463,7 @@ class SystemRunner:
         cost_map = self.fs_cost_map_obj
 
         # fs conv. cost Map
-        if config.USE_CONVMAP or conv_override:
+        if project_constants.USE_CONVMAP or conv_override:
             if self.fs_convcostmap_obj is None:
                 self.fs_convcostmap_obj = self.get_saved_object(SystemRunner.fs_convcostmap_type, print_loaded=False, print_dne=False)
             if self.fs_convcostmap_obj is None:
@@ -515,7 +515,7 @@ class SystemRunner:
                 self.results.hl_traj_runtime = hl_traj_runtime
 
                 if self.vis_window_id is not None:
-                    if config.HL_TRAJ_VISUALIZE_ROUTE:
+                    if project_constants.HL_TRAJ_VISUALIZE_ROUTE:
                         smoothed_path = self.hl_traj_obj.get_higher_density_xy_yaw_path()
                         VisUtils.visualize_xyz_list(smoothed_path, name="hl traj", height_map=self.hm_obj)
 
@@ -535,8 +535,8 @@ class SystemRunner:
                         if self.vis_window_id is not None:
                             fstep_seq_generator = StepSequencePlanner(
                                 self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map, self.xy_yaw0, self.xy_yawf,
-                                vis_successors=config.STEPSEQ_VISUALIZE_SUCCESSOR,
-                                deep_debug_visualization=config.STEPSEQ_VISUALIZE_INDIVIDUAL_FS_PLACEMENT_SEARCH,
+                                vis_successors=project_constants.STEPSEQ_VISUALIZE_SUCCESSOR,
+                                deep_debug_visualization=project_constants.STEPSEQ_VISUALIZE_INDIVIDUAL_FS_PLACEMENT_SEARCH,
                                 r_poser=self.rposer)
                         else:
                             fstep_seq_generator = StepSequencePlanner(self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
@@ -569,8 +569,8 @@ class SystemRunner:
 
                             if self.control_loop_output_obj is None or ignore_saved_cloop:
 
-                                disable_sleep = True if self.vis_window_id is None else config.CLOOP_ENABLE_SLEEP
-                                visualize = self.vis_window_id is not None and config.MPLANNER_VIS_ENABLED
+                                disable_sleep = True if self.vis_window_id is None else project_constants.CLOOP_ENABLE_SLEEP
+                                visualize = self.vis_window_id is not None and project_constants.MPLANNER_VIS_ENABLED
 
                                 self.active_control_loop = ControlLoop(
                                     self.planning_world, self.fs_scatter_obj, self.fs_seq_obj, self.hm_obj, self.gradient_map_obj,
@@ -580,7 +580,7 @@ class SystemRunner:
                                     lidar_mode=lidar_mode,
                                     visualize=visualize,
                                     disable_sleep=disable_sleep,
-                                    save_qs=config.CLOOP_SAVE_Qs
+                                    save_qs=project_constants.CLOOP_SAVE_Qs
                                 )
 
                                 Logger.log("Running full body motion planner", class_id=0, msg_type=2)
@@ -772,8 +772,8 @@ class SystemRunner:
                     Logger.log("Error: trajectory doesn't exist", color="FAIL", class_id=0, msg_type=1)
                     return
 
-                base_config = config.NOMINAL_CONFIG[:]
-                base_config[2] = config.TORSO_Z_DESIRED
+                base_config = project_constants.NOMINAL_CONFIG[:]
+                base_config[2] = project_constants.TORSO_Z_DESIRED
 
                 start_config = base_config
                 start_config[0] = self.hl_traj_obj.xy_yaw0[0]
@@ -894,51 +894,51 @@ class SystemRunner:
 
     def get_hash(self, obj_type):
 
-        hm_vars = self.HM_X_START + self.HM_X_END + config.HM_X_GRANULARITY + self.HM_Y_START + \
-                  self.HM_Y_END + config.HM_Y_GRANULARITY
+        hm_vars = self.HM_X_START + self.HM_X_END + project_constants.HM_X_GRANULARITY + self.HM_Y_START + \
+                  self.HM_Y_END + project_constants.HM_Y_GRANULARITY
 
         start_end_vars = .23*self.xy_yaw0[0] + .93*self.xy_yaw0[2] + .9323*self.xy_yaw0[1] + 1.0323*self.xy_yawf[0] + \
                          1.0323*self.xy_yawf[1] + self.xy_yawf[2]**2
 
-        hl_traj_vars = config.HLTRAJ_G_WEIGHT + config.HLTRAJ_H_WEIGHT + \
-                       config.HLTRAJ_YAW_OFFSET + config.HLTRAJ_DELTAX + \
-                       config.HLTRAJ_DELTAY + config.SEARCH_SPACE_X_MARGIN + \
-                       config.SEARCH_SPACE_Y_MARGIN + start_end_vars + \
-                       12.23 * config.BASE_STATE_END_EFF_DX_FROM_TORSO + \
-                       config.BASE_STATE_END_EFF_DY_FROM_TORSO ** 2
+        hl_traj_vars = project_constants.HLTRAJ_G_WEIGHT + project_constants.HLTRAJ_H_WEIGHT + \
+                       project_constants.HLTRAJ_YAW_OFFSET + project_constants.HLTRAJ_DELTAX + \
+                       project_constants.HLTRAJ_DELTAY + project_constants.SEARCH_SPACE_X_MARGIN + \
+                       project_constants.SEARCH_SPACE_Y_MARGIN + start_end_vars + \
+                       12.23 * project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO + \
+                       project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO ** 2
 
-        fs_seq_vars = config.STEPSEQ_G_WEIGHT + config.STEPSEQ_H_WEIGHT + \
-                      config.STEPSEQ_TRANSLATION_DISTANCE + config.STEP_ORDER[0] - \
-                      config.STEP_ORDER[3] + config.STEPSEQ_IDEAL_LOCATION_COST_COEFF + \
-                      config.STEPSEQ_MAX_DIAGNOL_DIST + \
-                      config.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
-                      start_end_vars + config.X_STEP_SIZE_FS_SCATTER + config.Y_STEP_SIZE_FS_SCATTER + \
-                      config.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS + \
-                      config.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
-                      config.HOOK_LENGTH + config.HOOK_DIST_TO_GROUND + \
-                      config.STEPSEQ_HOOK_SAFETY_MARGIN + \
-                      config.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
-                      config.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
-                      config.STEPSEQ_ZERO_COST_RADIUS ** 2 * 3 + \
-                      config.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * .83 + \
-                      config.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS + config.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
+        fs_seq_vars = project_constants.STEPSEQ_G_WEIGHT + project_constants.STEPSEQ_H_WEIGHT + \
+                      project_constants.STEPSEQ_TRANSLATION_DISTANCE + project_constants.STEP_ORDER[0] - \
+                      project_constants.STEP_ORDER[3] + project_constants.STEPSEQ_IDEAL_LOCATION_COST_COEFF + \
+                      project_constants.STEPSEQ_MAX_DIAGNOL_DIST + \
+                      project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
+                      start_end_vars + project_constants.X_STEP_SIZE_FS_SCATTER + project_constants.Y_STEP_SIZE_FS_SCATTER + \
+                      project_constants.STEPSEQ_KINEMATIC_INFEASIBILITY_CIRC_RADIUS_CENTERED_AT_ADJACENT_ENDEFFECTORS + \
+                      project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
+                      project_constants.HOOK_LENGTH + project_constants.HOOK_DIST_TO_GROUND + \
+                      project_constants.STEPSEQ_HOOK_SAFETY_MARGIN + \
+                      project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST + \
+                      project_constants.STEPSEQ_MAX_FOOTHOLD_TO_COM_ALONG_FOOTHOLD_INCENTER_LINE_DIST_d2 + \
+                      project_constants.STEPSEQ_ZERO_COST_RADIUS ** 2 * 3 + \
+                      project_constants.STEPSEQ_HEIGHT_NEAR_ENDEFF_COST_COEFF * .83 + \
+                      project_constants.STEPSEQ_USE_Z_IN_MAX_DIST_CALCS + project_constants.STEPSEQ_HEIGHT_AROUND_ENDEFF_R
 
-        cmap_vars = config.CMAP_STEP_SIZEX + config.CMAP_STEP_SIZEY + \
-                    config.CMAP_NORMALIZED_MAX_VALUE + config.CMAP_SLOPE_HEURISTIC_COEFF + \
-                    config.CMAP_ROUGHNESS_HEURISTIC_COEFF + config.CMAP_MAX_NONPENALIZED_SLOPE + \
-                    config.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE + \
-                    config.END_AFFECTOR_RADIUS + config.COST_MAP_SEARCH_MARGIN_WIDTH + \
-                    config.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF + config.CMAP_STEP_COSTFN_SEARCH_SIZE + \
-                    config.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF + config.CMAP_STEP_COSTFN_BASELINE_COST
+        cmap_vars = project_constants.CMAP_STEP_SIZEX + project_constants.CMAP_STEP_SIZEY + \
+                    project_constants.CMAP_NORMALIZED_MAX_VALUE + project_constants.CMAP_SLOPE_HEURISTIC_COEFF + \
+                    project_constants.CMAP_ROUGHNESS_HEURISTIC_COEFF + project_constants.CMAP_MAX_NONPENALIZED_SLOPE + \
+                    project_constants.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE + \
+                    project_constants.END_AFFECTOR_RADIUS + project_constants.COST_MAP_SEARCH_MARGIN_WIDTH + \
+                    project_constants.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF + project_constants.CMAP_STEP_COSTFN_SEARCH_SIZE + \
+                    project_constants.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF + project_constants.CMAP_STEP_COSTFN_BASELINE_COST
 
-        if config.USE_CONVMAP:
+        if project_constants.USE_CONVMAP:
             fs_seq_vars += .1866
 
         if obj_type == SystemRunner.hm_type:
             hash_input = hm_vars
 
         elif obj_type == SystemRunner.fs_convcostmap_type:
-            hash_input = cmap_vars + config.CONV_X_WIDTH + config.CONV_Y_WIDTH
+            hash_input = cmap_vars + project_constants.CONV_X_WIDTH + project_constants.CONV_Y_WIDTH
 
         elif obj_type == SystemRunner.fs_costmap_type:
             hash_input = hm_vars + cmap_vars
@@ -950,15 +950,15 @@ class SystemRunner:
             hash_input = hm_vars + hl_traj_vars
 
         elif obj_type == SystemRunner.fs_scatter_type:
-            hash_input = hm_vars + start_end_vars + config.X_STEP_SIZE_FS_SCATTER + \
-                         config.Y_STEP_SIZE_FS_SCATTER
+            hash_input = hm_vars + start_end_vars + project_constants.X_STEP_SIZE_FS_SCATTER + \
+                         project_constants.Y_STEP_SIZE_FS_SCATTER
 
         elif obj_type == SystemRunner.fs_seq_type:
             hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars
 
         elif obj_type == SystemRunner.control_loop_type:
-            hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars + config.END_RANGE_MULTIPLIER + \
-                         config.TORSO_Z_DESIRED
+            hash_input = hm_vars + start_end_vars + hl_traj_vars + fs_seq_vars + project_constants.END_RANGE_MULTIPLIER + \
+                         project_constants.TORSO_Z_DESIRED
             if self.cloop_run_name:
                 for letter in self.cloop_run_name:
                     hash_input += ord(letter)

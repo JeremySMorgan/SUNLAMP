@@ -17,7 +17,7 @@ from src.motion.motion_utils import MotionUtils, Constraints
 from src.utils.logger import Logger as Lg
 from src.utils.math_utils import MathUtils
 from src.utils.vis_utils import VisUtils
-from src.utils import config
+from src.utils import project_constants
 
 
 def end_config_exhaustive_search(
@@ -169,7 +169,7 @@ class ConfigSpacePlanner(MotionUtils):
     max_joint_angle_change_deg = 2.5
     max_allowed_joint_angle_change = np.deg2rad(max_joint_angle_change_deg)
 
-    if config.MPLANNER_VERBOSITY >= 3:
+    if project_constants.MPLANNER_VERBOSITY >= 3:
         print("\nmax_allowed_joint_angle_change:", round(max_allowed_joint_angle_change, 4))
 
     max_torso_translation_dist = .015
@@ -948,7 +948,7 @@ class ConfigSpacePlanner(MotionUtils):
 
     def plan_legstep(self, r_pose, constraint_obj, stance_idx: int, visualize=False, only_use_sbl=False):
 
-        debug = config.MPLANNER_VERBOSITY >= 3
+        debug = project_constants.MPLANNER_VERBOSITY >= 3
 
         return_configs = []
 
@@ -1050,7 +1050,7 @@ class ConfigSpacePlanner(MotionUtils):
 
         pre_sleep_t = 0.0
         q_arc_sleep = 0.0
-        ik_arcdebug = config.MPLANNER_VERBOSITY >= 4
+        ik_arcdebug = project_constants.MPLANNER_VERBOSITY >= 4
 
         if only_use_sbl:
             Lg.log("Warning: Only use SBL enabled", "WARNING")
@@ -1186,7 +1186,7 @@ class ConfigSpacePlanner(MotionUtils):
             end_config = end_configs[end_config_i]
             t_start = time.time()
             try:
-                algo = config.KLAMPT_MPLANNER_ALGO
+                algo = project_constants.KLAMPT_MPLANNER_ALGO
                 settings = {'type': algo, 'perturbationRadius': 0.5, 'bidirectional': 1, 'shortcut': 0, 'restart': 0,
                             'restartTermCond': "{foundSolution:1, maxIters:1000}"}
                 plan = cspace.MotionPlan(space)
@@ -1226,21 +1226,21 @@ class ConfigSpacePlanner(MotionUtils):
                 if discretized_path_valid:
                     plan.close()
                     if debug:
-                        print(f"Built valid path with {config.KLAMPT_MPLANNER_ALGO} "
+                        print(f"Built valid path with {project_constants.KLAMPT_MPLANNER_ALGO} "
                               f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
                     return discretized_path
 
                 if debug:
-                    print(f"discretizedPath for path built by {config.KLAMPT_MPLANNER_ALGO} "
+                    print(f"discretizedPath for path built by {project_constants.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} is invalid. search and discretization completed "
                           f"in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             else:
                 if debug:
-                    print(f"Failed to build a path with {config.KLAMPT_MPLANNER_ALGO} "
+                    print(f"Failed to build a path with {project_constants.KLAMPT_MPLANNER_ALGO} "
                           f"for end-config {end_config_i + 1}/{len(end_configs)} in {Lg.bold_txt(round(time.time() - t_start, 3))} seconds")
             plan.close()
             if debug:
-                print(f"{config.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
+                print(f"{project_constants.KLAMPT_MPLANNER_ALGO} search failed for end-config {end_config_i + 1}/"
                       f"{len(end_configs)} in {Lg.bold_txt(round(time.time()-t_start,2))} seconds")
         return False
 
@@ -1262,9 +1262,9 @@ class ConfigSpacePlanner(MotionUtils):
         moving_endeff_xyzRf = self.get_end_effector_current_xyzRs()[moving_leg - 1]
         moving_endeff_xyzR0 = r_pose.get_moving_leg_xyzR(moving_leg)
         max_obst_height_in_path = -np.inf
-        r_world = config.HOOK_LENGTH + config.END_AFFECTOR_RADIUS
+        r_world = project_constants.HOOK_LENGTH + project_constants.END_AFFECTOR_RADIUS
         for i in range(50):
-            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, config.STEP_HEIGHT)[0:2]
+            xy_i = self.get_parabolic_mid_motion_xyzR(moving_endeff_xyzR0, moving_endeff_xyzRf, i, 50, project_constants.STEP_HEIGHT)[0:2]
             tallest_obs_height = self.height_map.max_in_radius_r_centered_at_xy(xy_i[0], xy_i[1], r_world)
             max_obst_height_in_path = max(max_obst_height_in_path, tallest_obs_height)
 
@@ -1335,7 +1335,7 @@ class ConfigSpacePlanner(MotionUtils):
                 imax, config_valid, arc_ik_targets, start_config, linear_torso_motion,
                 leg_motion_fn=self.get_parabolic_mid_motion_xyzR, moving_leg_xyzR0=moving_endeff_xyzR0,
                 moving_leg_xyzRf=moving_endeff_xyzRf, moving_end_effector=moving_end_effector,
-                step_height=config.STEP_HEIGHT,
+                step_height=project_constants.STEP_HEIGHT,
                 debug=q_arc_debug, sleep_t=q_arc_sleep
             )
 
@@ -1428,7 +1428,7 @@ class ConfigSpacePlanner(MotionUtils):
 
     def plan_torsoshift(self, r_pose, constraint_obj: Constraints, stance_idx, visualize=False, only_use_sbl=False):
 
-        debug = config.MPLANNER_VERBOSITY >= 3
+        debug = project_constants.MPLANNER_VERBOSITY >= 3
 
         # Function wide variables
         fl_xyz, fr_xyz, br_xyz, bl_xyz = r_pose.fl, r_pose.fr, r_pose.br, r_pose.bl

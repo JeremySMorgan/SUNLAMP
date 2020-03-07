@@ -3,7 +3,7 @@ from klampt.math import so3
 from klampt.model import ik
 from klampt.robotsim import IKSolver
 from src.utils.logger import Logger
-from src.utils import config
+from src.utils import project_constants
 
 class RobotPoser:
 
@@ -22,7 +22,7 @@ class RobotPoser:
         if fs_scatter: self.scatter_list = fs_scatter.get_scatter_list()
 
     def reset_robot(self):
-        self.robosimian.setConfig(config.NOMINAL_CONFIG)
+        self.robosimian.setConfig(project_constants.NOMINAL_CONFIG)
 
     def set_end_effectors_xyz_torso_xyz_yaw(self,fl,fr,br,bl, torso_x,torso_y, torso_z, yaw_rads):
 
@@ -35,7 +35,7 @@ class RobotPoser:
         b_l_r_const = ik.objective(self.b_l, R=self.get_desired_end_effector_rotation(3, yaw_rads), t=bl)
         b_r_r_const = ik.objective(self.b_r, R=self.get_desired_end_effector_rotation(4, yaw_rads), t=br)
 
-        bias_config = config.NOMINAL_CONFIG
+        bias_config = project_constants.NOMINAL_CONFIG
         goals = [f_l_r_const, f_r_r_const, b_l_r_const, b_r_r_const,torso_obj]
 
         s = IKSolver(self.robosimian)
@@ -52,7 +52,7 @@ class RobotPoser:
         torso_x, torso_y, yaw_rads = self.get_torso_xy_yaw(q)
         if not torso_x:
             return
-        torso_z = config.TORSO_Z_DESIRED
+        torso_z = project_constants.TORSO_Z_DESIRED
 
         fl_global = self.replace_end_effector_z(self.scatter_list[q[0]][0:3])
         fr_global = self.replace_end_effector_z(self.scatter_list[q[1]][0:3])
@@ -72,7 +72,7 @@ class RobotPoser:
 
         global_torso_xyz = [torso_x, torso_y, torso_z]
         torso_obj = ik.objective(self.torso, local=[0,0,0],world=global_torso_xyz)
-        bias_config = config.NOMINAL_CONFIG
+        bias_config = project_constants.NOMINAL_CONFIG
         goals = [f_l_r_const, f_r_r_const, b_l_r_const, b_r_r_const, torso_obj]
 
         s = IKSolver(self.robosimian)
@@ -85,7 +85,7 @@ class RobotPoser:
         return True
 
     def replace_end_effector_z(self,xyz):
-            xyz_new = [xyz[0], xyz[1], xyz[2] + config.END_EFFECTOR_HEIGHT]
+            xyz_new = [xyz[0], xyz[1], xyz[2] + project_constants.END_EFFECTOR_HEIGHT]
             return xyz_new
 
     def always_true_func(self):

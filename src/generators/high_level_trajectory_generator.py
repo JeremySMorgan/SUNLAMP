@@ -8,7 +8,7 @@ from src.utils.logger import Logger
 
 from src.generators.generator_superclass import GeneratorSuperclass
 from src.utils.math_utils import MathUtils
-from src.utils import config
+from src.utils import project_constants
 
 class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
@@ -25,7 +25,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         self.fs_cost_map = fs_cost_map
         self.height_map = height_map
 
-        self.vis_successor = config.STEPSEQ_VISUALIZE_SUCCESSOR
+        self.vis_successor = project_constants.STEPSEQ_VISUALIZE_SUCCESSOR
         self.rposer = rposer
 
         self.directions = [
@@ -58,8 +58,8 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
             [-1.0, -1, -1]
         ]
 
-        self.end_effector_x = config.BASE_STATE_END_EFF_DX_FROM_TORSO
-        self.end_effector_y = config.BASE_STATE_END_EFF_DY_FROM_TORSO
+        self.end_effector_x = project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO
+        self.end_effector_y = project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO
         self.base_theta = np.arctan(self.end_effector_y / self.end_effector_x)
         self.xy_yaw_costs = {}
         self.decimal_round = 5
@@ -83,10 +83,10 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
             self.inbounds_error = True
 
     def save_search_weights(self, debug=False):
-        self.g_weight = config.HLTRAJ_G_WEIGHT
-        self.h_weight = config.HLTRAJ_H_WEIGHT
+        self.g_weight = project_constants.HLTRAJ_G_WEIGHT
+        self.h_weight = project_constants.HLTRAJ_H_WEIGHT
 
-        if config.STEPSEQ_VERBOSITY >= 3:
+        if project_constants.STEPSEQ_VERBOSITY >= 3:
             print("g weight:",Logger.pp_double(self.g_weight),", h_weight:",Logger.pp_double(self.h_weight))
 
     def build_trajectory(self, suspend_after=None):
@@ -99,7 +99,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
             return -2
 
         t_start = time.time()
-        if config.STEPSEQ_VERBOSITY >= 2:
+        if project_constants.STEPSEQ_VERBOSITY >= 2:
             print("Starting high level trajectory A* search")
 
         if suspend_after:
@@ -115,7 +115,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
             try:
                 self.search()
             except Exception as e:
-                if config.STEPSEQ_VERBOSITY >= 1:
+                if project_constants.STEPSEQ_VERBOSITY >= 1:
                     Logger.log(f"Failed to build a path after {round(suspend_after), 2} seconds", "FAIL")
                 return -1
 
@@ -126,7 +126,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
         path = self.result_path()
 
-        if config.STEPSEQ_VERBOSITY >= 2:
+        if project_constants.STEPSEQ_VERBOSITY >= 2:
             print("High level trajectory search finished in:",time.time() - t_start, "s")
 
         state_path = []
@@ -157,7 +157,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         return self.smoothed_path
 
     def save_high_density_xy_yaw_path(self):
-        num_to_add_between_points = config.HLTRAJ_NB_POINTS_BTWN_PATH_NODES
+        num_to_add_between_points = project_constants.HLTRAJ_NB_POINTS_BTWN_PATH_NODES
         extended_xy_yaw_path = MathUtils.list_extender(self.xy_yaw_path, num_to_add_between_points)
         self.higher_density_xy_yaw_path = extended_xy_yaw_path
         ave_dist = 0
@@ -173,7 +173,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
     # --------------------- A* Functions
     def is_goal(self, state, debug=False):
-        err_threshold = config.HLTRAJ_GOAL_THRESHOLD
+        err_threshold = project_constants.HLTRAJ_GOAL_THRESHOLD
         dist = np.fabs(state[0]-self.xy_yawf[0])+ np.fabs(state[1]-self.xy_yawf[1])
         # if project_constants.STEPSEQ_VERBOSITY >= 3:
         #     if dist < 1:
@@ -188,9 +188,9 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         # self.iterations += 1
         successors, successor_costs = [],[]
         for direction in self.directions:
-            x_new = self.round(state[0] + direction[0] * config.HLTRAJ_DELTAX * np.cos(self.straight_path_yaw_rad))
-            y_new = self.round(state[1] + direction[1] * config.HLTRAJ_DELTAY * np.sin(self.straight_path_yaw_rad))
-            yaw_new = self.round(state[2] + direction[2] * config.HLTRAJ_YAW_OFFSET)
+            x_new = self.round(state[0] + direction[0] * project_constants.HLTRAJ_DELTAX * np.cos(self.straight_path_yaw_rad))
+            y_new = self.round(state[1] + direction[1] * project_constants.HLTRAJ_DELTAY * np.sin(self.straight_path_yaw_rad))
+            yaw_new = self.round(state[2] + direction[2] * project_constants.HLTRAJ_YAW_OFFSET)
 
             # if state[3] is not None:
             #     new_state = (x_new, y_new, yaw_new, (state[0], state[1], state[2]), (state[3][0], state[3][1], state[3][2]))
@@ -222,9 +222,9 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
         if self.vis_successor:
             if random.randint(0,1000)>950:
-                self.rposer.set_xyz_yaw(state[0], state[1], config.TORSO_Z_DESIRED, np.deg2rad(state[2]))
+                self.rposer.set_xyz_yaw(state[0], state[1], project_constants.TORSO_Z_DESIRED, np.deg2rad(state[2]))
 
-        if config.STEPSEQ_VERBOSITY >= 3:
+        if project_constants.STEPSEQ_VERBOSITY >= 3:
             if random.randint(0,1000)> 950:
                 node = self.visited_state_node(state)
                 # self.is_goal(state, debug=True)
@@ -278,7 +278,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
     
     def save_smoothed_path(self):
 
-        if config.STEPSEQ_VERBOSITY >= 3:
+        if project_constants.STEPSEQ_VERBOSITY >= 3:
             for xy_yaw in self.xy_yaw_path:
                 print("  ",Logger.pp_list(xy_yaw))
         try:
@@ -298,8 +298,8 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
     def get_cost(self, x, y, yaw, debug=False):
 
-        x_margin = config.SEARCH_SPACE_X_MARGIN
-        y_margin = config.SEARCH_SPACE_Y_MARGIN
+        x_margin = project_constants.SEARCH_SPACE_X_MARGIN
+        y_margin = project_constants.SEARCH_SPACE_Y_MARGIN
         fl_base, fr_base, br_base, bl_base = self.get_end_affector_xyz_coords_from_xy_yaw_deg_at_base_state([x,y,yaw],debug=debug, with_x_margin=x_margin, with_y_margin=y_margin)
 
         # out of search area

@@ -3,7 +3,7 @@ from klampt.model import ik
 from klampt.robotsim import IKSolver
 from src.utils.logger import Logger
 from src.motion.motion_utils import MotionUtils
-from src.utils import config
+from src.utils import project_constants
 
 class IKSolverUtils(MotionUtils):
 
@@ -21,7 +21,7 @@ class IKSolverUtils(MotionUtils):
 
         des_torso_rotation = self.get_torso_R_from_yaw_rad(np.deg2rad(torso_xyz_yawdeg[3]))
         torso_obj = ik.objective(self.torso, R=des_torso_rotation, t=torso_xyz_yawdeg[0:3])
-        bias_config = config.NOMINAL_CONFIG
+        bias_config = project_constants.NOMINAL_CONFIG
         bias_config[0] = torso_xyz_yawdeg[0]
         bias_config[1] = torso_xyz_yawdeg[1]
         bias_config[2] = torso_xyz_yawdeg[2]
@@ -54,7 +54,7 @@ class IKSolverUtils(MotionUtils):
         for goal in goals:
             s.add(goal)
         # s.setTolerance(ik_max_deviation)
-        s.setBiasConfig(config.NOMINAL_CONFIG)
+        s.setBiasConfig(project_constants.NOMINAL_CONFIG)
         res = s.solve()
         if not res:
             print("set_pose IK error")
@@ -67,7 +67,7 @@ class IKSolverUtils(MotionUtils):
         if not torso_x:
             Logger.log(("stance: end config"), "OKGREEN")
             return
-        torso_z = config.TORSO_Z_DESIRED
+        torso_z = project_constants.TORSO_Z_DESIRED
 
         fl_global = self.adjust_endeff_z(self.scatter_list[q[0]][0:3])
         fr_global = self.adjust_endeff_z(self.scatter_list[q[1]][0:3])
@@ -88,7 +88,7 @@ class IKSolverUtils(MotionUtils):
         global_torso_xyz = [torso_x, torso_y, torso_z]
         des_torso_rotation = self.get_torso_R_from_yaw_rad(yaw_rads)
         torso_obj = ik.objective(self.torso, R=des_torso_rotation, t=global_torso_xyz)
-        bias_config = config.NOMINAL_CONFIG
+        bias_config = project_constants.NOMINAL_CONFIG
         goals = [f_l_r_const, f_r_r_const, b_l_r_const, b_r_r_const, torso_obj]
 
         s = IKSolver(self.robosimian)

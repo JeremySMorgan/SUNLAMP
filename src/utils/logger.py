@@ -1,16 +1,16 @@
 import datetime
 import numpy as np
 import inspect
-from src.utils import config
+from src.utils import project_constants
 
 class Logger:
 
     class_logging_levels = [
-        config.SYS_RUNNER_VERBOSITY,
-        config.HL_TRAJ_VERBOSITY,
-        config.STEPSEQ_VERBOSITY,
-        config.MPLANNER_VERBOSITY,
-        config.CLOOP_VERBOSITY
+        project_constants.SYS_RUNNER_VERBOSITY,
+        project_constants.HL_TRAJ_VERBOSITY,
+        project_constants.STEPSEQ_VERBOSITY,
+        project_constants.MPLANNER_VERBOSITY,
+        project_constants.CLOOP_VERBOSITY
     ]
 
     class colors:
@@ -81,7 +81,7 @@ class Logger:
 
     @staticmethod
     def bold_txt(msg, color="STANDARD"):
-        if not config.LOGGER_COLORS_ENABLED:
+        if not project_constants.LOGGER_COLORS_ENABLED:
             return str(msg)
         else:
             return Logger.COLORS[color]["value"] + Logger.COLORS["BOLD"]["value"] + str(msg) + Logger.COLORS["ENDC"]["value"]
@@ -107,21 +107,21 @@ class Logger:
         else:
             pre = ""
 
-        if config.LOGGER_COLORS_ENABLED:
+        if project_constants.LOGGER_COLORS_ENABLED:
             return pre + msg + Logger.COLORS["ENDC"]["value"]
         return msg
 
     @staticmethod
     def log_bold(s):
 
-        if not config.LOGGER_COLORS_ENABLED:
+        if not project_constants.LOGGER_COLORS_ENABLED:
             return str(s)
         else:
             return Logger.styled_text(str(s), "BOLD")
 
     @staticmethod
     def fail(msg):
-        if not config.LOGGER_COLORS_ENABLED:
+        if not project_constants.LOGGER_COLORS_ENABLED:
             return msg
         return Logger.COLORS["FAIL"]["value"]+msg+Logger.COLORS["ENDC"]["value"]
 
@@ -131,7 +131,7 @@ class Logger:
 
     @staticmethod
     def styled_text(msg, style):
-        if config.LOGGER_COLORS_ENABLED:
+        if project_constants.LOGGER_COLORS_ENABLED:
             return Logger.COLORS[style.upper()]["value"] + msg + Logger.COLORS["ENDC"]["value"]
         return msg
 
@@ -209,7 +209,7 @@ class Logger:
 
         prefix = "["+str(time.day)+"/"+str(time.month)+ "/" + str(time.year) + " " + str(time.hour) + ":" + str(time.minute) + ":" + str(time.second) +  " ] "
 
-        if not config.LOGGER_COLORS_ENABLED:
+        if not project_constants.LOGGER_COLORS_ENABLED:
             print(prefix + "" + caller + ": " + message)
         else:
             prefix = prefix + Logger.COLORS["BOLD"]["value"]+ Logger.COLORS["UNDERLINE"]["value"]+ caller+ Logger.COLORS["ENDC"]["value"]+ ":"
@@ -227,7 +227,7 @@ class Logger:
     def pp_list(input_list_, round_amt=3):
         ret = "[ "
         if input_list_ is None:
-            if not config.LOGGER_COLORS_ENABLED:
+            if not project_constants.LOGGER_COLORS_ENABLED:
                 return "None"
             return Logger.COLORS["BOLD"]["value"] + "None" + Logger.COLORS["ENDC"]["value"]
 

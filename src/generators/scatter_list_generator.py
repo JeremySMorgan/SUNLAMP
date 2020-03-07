@@ -6,7 +6,7 @@ from src.utils.logger import Logger
 
 
 from src.utils.math_utils import MathUtils
-from src.utils import config
+from src.utils import project_constants
 
 class ScatterListGenerator:
 
@@ -18,10 +18,10 @@ class ScatterListGenerator:
 
         self.fs_scatter_obj = FootstepScatter()
 
-        self.x_granularity = config.X_STEP_SIZE_FS_SCATTER
+        self.x_granularity = project_constants.X_STEP_SIZE_FS_SCATTER
         self.x_start = self.height_map.x_start
         self.x_end = self.height_map.x_end
-        self.y_granularity = config.Y_STEP_SIZE_FS_SCATTER
+        self.y_granularity = project_constants.Y_STEP_SIZE_FS_SCATTER
         self.y_start = self.height_map.y_start
         self.y_end = self.height_map.y_end
 
@@ -47,8 +47,8 @@ class ScatterListGenerator:
                     print("value error. world x,y: ", world_x, world_y)
 
 
-                world_y += config.Y_STEP_SIZE_FS_SCATTER
-            world_x += config.X_STEP_SIZE_FS_SCATTER
+                world_y += project_constants.Y_STEP_SIZE_FS_SCATTER
+            world_x += project_constants.X_STEP_SIZE_FS_SCATTER
             world_y = self.y_start
 
         # Add Starting Leg Positions to scatter
@@ -91,7 +91,7 @@ class ScatterListGenerator:
         yaw_rad = np.deg2rad(xy_yaw_deg[2])
         x = xy_yaw_deg[0]
         y = xy_yaw_deg[1]
-        base = (config.BASE_STATE_END_EFF_DX_FROM_TORSO, config.BASE_STATE_END_EFF_DY_FROM_TORSO)
+        base = (project_constants.BASE_STATE_END_EFF_DX_FROM_TORSO, project_constants.BASE_STATE_END_EFF_DY_FROM_TORSO)
 
         fl = MathUtils._2d_rotation_transformation(base[0], base[1], yaw_rad)
         fr = MathUtils._2d_rotation_transformation(base[0], -base[1], yaw_rad)

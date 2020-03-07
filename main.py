@@ -6,13 +6,22 @@ from scripts.world_builder import WorldBuilder
 from src.system_runner import SystemRunner
 from src.utils.logger import Logger
 from src.lidar.pcloud_parser import PCloudParser
-from src.utils import config
+from src.utils import project_constants
 from src.utils.data_objects.system_runner_results import SystemRunnerResults
 
 
 def main():
 
     # TODO: decrease step distance
+
+    print('\nConfig options:\n')
+    for v in dir(project_constants):
+        if v[0] == '_':
+            continue
+        s = eval(f'config.{v}')
+        print('  {:25}\t{}'.format(v, s))
+    print()
+
 
     # ___________________  Run Simulation World
 
@@ -52,9 +61,11 @@ def main():
         visualize=visualize,
         cloop_run_name=cloop_run_name)
 
-    srunner.delete_all_saved_data()
-    srunner.run()
-    srunner.save_all()
+    # srunner.delete_all_saved_data()
+    # srunner.run()
+    # srunner.save_all()
+
+
 
     # srunner.visualize()
 

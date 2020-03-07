@@ -5,7 +5,7 @@ from src.utils.data_objects.gradient_map import GradientMap
 from src.utils.data_objects.height_map import HeightMap
 from src.utils.logger import Logger
 from src.utils.math_utils import MathUtils
-from src.utils import config
+from src.utils import project_constants
 
 class FootstepCostMapGenerator:
 
@@ -35,7 +35,7 @@ class FootstepCostMapGenerator:
         return self.fs_cost_array_obj
 
     def normalize_cost_arr(self, debug=False):
-        self.fs_cost_array_obj.normalize_cost_arr(config.CMAP_NORMALIZED_MAX_VALUE, debug=debug)
+        self.fs_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE, debug=debug)
 
     def build_costmap(self, debug=False, exlude_slope=False, exlude_roughness=False, exlude_step=False):
         '''
@@ -45,8 +45,8 @@ class FootstepCostMapGenerator:
             print("calculating footstep location costs")
         start_t = time.time()
 
-        x_step_size_world = config.CMAP_STEP_SIZEX
-        y_step_size_world = config.CMAP_STEP_SIZEY
+        x_step_size_world = project_constants.CMAP_STEP_SIZEX
+        y_step_size_world = project_constants.CMAP_STEP_SIZEY
 
         x_idxs_per_step = x_step_size_world / self.hm_obj.x_granularity
         y_idxs_per_step = y_step_size_world / self.hm_obj.y_granularity
@@ -71,8 +71,8 @@ class FootstepCostMapGenerator:
 
         # discontinuity_degree_threshold - slopes greater than this will be considered discontinuities and ignored by this heuristic.
 
-        x_idxs_in_step_fn_search_area = int(config.CMAP_STEP_COSTFN_SEARCH_SIZE / self.hm_obj.x_granularity)
-        y_idxs_in_step_fn_search_area = int(config.CMAP_STEP_COSTFN_SEARCH_SIZE / self.hm_obj.y_granularity)
+        x_idxs_in_step_fn_search_area = int(project_constants.CMAP_STEP_COSTFN_SEARCH_SIZE / self.hm_obj.x_granularity)
+        y_idxs_in_step_fn_search_area = int(project_constants.CMAP_STEP_COSTFN_SEARCH_SIZE / self.hm_obj.y_granularity)
 
         hm_np_arr = self.hm_obj.get_np_hm_array()
         # grad_x_np_arr = self.gradient_map.get_np_x_gradient()
@@ -114,19 +114,19 @@ class FootstepCostMapGenerator:
                     x_grad, y_grad = self.gradient_map.get_grad_at_xy_idx(x_idx, y_idx)
                     abs_x_slope_deg, abs_y_slope_deg = np.abs(MathUtils.gradient_to_slope_deg(x_grad)), np.abs(MathUtils.gradient_to_slope_deg(y_grad))
 
-                    x_cost = abs_x_slope_deg - config.CMAP_MAX_NONPENALIZED_SLOPE
-                    y_cost = abs_y_slope_deg - config.CMAP_MAX_NONPENALIZED_SLOPE
+                    x_cost = abs_x_slope_deg - project_constants.CMAP_MAX_NONPENALIZED_SLOPE
+                    y_cost = abs_y_slope_deg - project_constants.CMAP_MAX_NONPENALIZED_SLOPE
 
                     # Filter height map discontinuities and non penalized slopes
-                    if abs_x_slope_deg > config.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE or \
-                            abs_x_slope_deg < config.CMAP_MAX_NONPENALIZED_SLOPE:
+                    if abs_x_slope_deg > project_constants.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE or \
+                            abs_x_slope_deg < project_constants.CMAP_MAX_NONPENALIZED_SLOPE:
                         x_cost = 0
 
-                    if abs_y_slope_deg > config.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE or \
-                            abs_y_slope_deg < config.CMAP_MAX_NONPENALIZED_SLOPE:
+                    if abs_y_slope_deg > project_constants.CMAP_SLOPE_HEURISTIC_MAX_CONSIDERED_DEGREE or \
+                            abs_y_slope_deg < project_constants.CMAP_MAX_NONPENALIZED_SLOPE:
                         y_cost = 0
 
-                    slope_cost = config.CMAP_SLOPE_HEURISTIC_COEFF * (x_cost + y_cost) / 2
+                    slope_cost = project_constants.CMAP_SLOPE_HEURISTIC_COEFF * (x_cost + y_cost) / 2
 
                     # if c > 0:
                     #     print(f" {round(world_x, 2)},  {round(world_y, 2)}, abs slope x: {round(abs_x_slope_deg,2)}\t y: {round(abs_y_slope_deg,2)}")
@@ -145,8 +145,8 @@ class FootstepCostMapGenerator:
                         if np.amax(np.abs(np.diff(x_row))) > max_dif:
                             max_dif = np.amax(np.abs(np.diff(x_row)))
 
-                    if max_dif > config.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF:
-                        step_cost = config.CMAP_STEP_COSTFN_BASELINE_COST + config.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF * max_dif
+                    if max_dif > project_constants.CMAP_STEP_COSTFN_MIN_HEIGHT_DIF:
+                        step_cost = project_constants.CMAP_STEP_COSTFN_BASELINE_COST + project_constants.CMAP_STEP_COSTFN_DIF_SLOPE_COEFF * max_dif
 
                     # d = .025
                     # if np.abs(world_x - 5) < d and np.abs(world_y - 1.4) < d:
@@ -175,7 +175,7 @@ class FootstepCostMapGenerator:
                         # normalized_mse = mse / (hm_sub_arr.shape[0] * hm_sub_arr.shape[1])
                         # roughness_cost = project_constants.CMAP_ROUGHNESS_HEURISTIC_COEFF * normalized_mse
 
-                        roughness_cost = config.CMAP_ROUGHNESS_HEURISTIC_COEFF * mse
+                        roughness_cost = project_constants.CMAP_ROUGHNESS_HEURISTIC_COEFF * mse
 
                         # d = .025
                         # if np.abs(world_x - 5) < d and np.abs(world_y - .9) < d:
