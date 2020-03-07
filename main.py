@@ -27,17 +27,37 @@ def main():
 
     # obstacle_world[1-3], medium_diff_slant_world really easy
 
-    # x_range = [-5, 5]
-    # y_range = [-.5, 3]
-    # robot_q0 = [-4, 1, 0]
-    # robot_qf = [3.75, 1, 0]
-    # world_name = "hectic_world"
+    cloop_run_name = ""
+    visualize = False
+    execution_world_enabled = False
 
-    # x_range = [4.5, 18.25]
-    # y_range = [0, 2.25]
-    # robot_q0 = [5.75, 1.1, 0]
-    # robot_qf = [17.25, 1, 0]
-    # world_name = "drc_rough_terrain_world"
+    x_range = [-5, 5]
+    y_range = [-.5, 3]
+    robot_q0 = [-4, 1, 0]
+    robot_qf = [3.75, 1, 0]
+    world_name = "hectic_world"
+
+    srunner = SystemRunner()
+    srunner.initialize_sim_world(
+        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
+        visualize=visualize, cloop_run_name=cloop_run_name)
+    srunner.run()
+    srunner.save_all()
+
+
+    x_range = [4.5, 18.25]
+    y_range = [0, 2.25]
+    robot_q0 = [5.75, 1.1, 0]
+    robot_qf = [17.25, 1, 0]
+    world_name = "drc_rough_terrain_world"
+
+    srunner = SystemRunner()
+    srunner.initialize_sim_world(
+        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
+        visualize=visualize, cloop_run_name=cloop_run_name)
+    srunner.run()
+    srunner.save_all()
+
 
     x_range = [-5, 5, .015]
     y_range = [-.25, 3, .015]
@@ -45,25 +65,26 @@ def main():
     robot_qf = [-2.75, 1, 0]
     world_name = "flatworld"
 
-    # world_name = "very_hectic_world"
-    # x_range = [-5, 5, .015]
-    # y_range = [-2.25, 2.25, .015]
-    # robot_q0 = [-4, 0, 0]
-    # robot_qf = [4, .5, 0]
+    srunner = SystemRunner()
+    srunner.initialize_sim_world(
+        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
+        visualize=visualize, cloop_run_name=cloop_run_name)
+    srunner.run()
+    srunner.save_all()
 
-    cloop_run_name = ""
-    visualize = False
-    execution_world_enabled = True
+
+    world_name = "very_hectic_world"
+    x_range = [-5, 5, .015]
+    y_range = [-2.25, 2.25, .015]
+    robot_q0 = [-4, 0, 0]
+    robot_qf = [4, .5, 0]
 
     srunner = SystemRunner()
     srunner.initialize_sim_world(
         x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
-        visualize=visualize,
-        cloop_run_name=cloop_run_name)
-
-    # srunner.delete_all_saved_data()
-    # srunner.run()
-    # srunner.save_all()
+        visualize=visualize, cloop_run_name=cloop_run_name)
+    srunner.run()
+    srunner.save_all()
 
 
 
