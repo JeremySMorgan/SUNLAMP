@@ -7,13 +7,15 @@ from mpl_toolkits.mplot3d import Axes3D
 from .map_superclass import Map
 from klampt import vis
 from klampt.model import trajectory
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class FootstepCostMap(Map):
+class FootstepCostMap(Map, OutputSuperclass):
 
     def __init__(self, hm_xvars, hm_yvars):
 
         super(self.__class__, self).__init__()
+        OutputSuperclass.__init__(self, "fs cost map")
 
         self.x_vars = hm_xvars
         self.y_vars = hm_yvars
@@ -116,8 +118,10 @@ class FootstepCostMap(Map):
         fig.colorbar(surf, shrink=0.5, aspect=5)
         plt.show()
 
-    def save(self,save_file, print_=True):
-        pickle.dump(self, open(save_file+".pickle", "wb"))
-        if print_:
-            print("footstep cost map saved")
-
+    def print_stats(self):
+        print("<CostMap Obj>")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime, 2)}")
+        print(f"      x range:\t\t{round(self.x_start, 2)} - {round(self.x_end, 2)}")
+        print(f"      y range:\t\t{round(self.y_start, 2)} - {round(self.y_end, 2)}")
+        print(f"      np arr size:\t[{self.x_indices} {self.y_indices}]\n")

@@ -3,7 +3,7 @@ from klampt.model import collide
 from src.utils.logger import Logger
 from src.utils.data_objects.height_map import HeightMap
 from src.utils import project_constants
-
+import time
 
 class HeightMapGenerator:
 
@@ -55,12 +55,19 @@ class HeightMapGenerator:
             print("Error: no collision detected at", x, ",", y)
             return 0
 
-    def build_height_map(self):
-        ''' returns runtime
+    def build_height_map(self, debug=False):
+        ''' returns HeightMap object
         '''
-        return self.HeightMap.build_height_map(self.height_at_xy)
 
-    def return_height_map(self):
+        start_t = time.time()
+        self.HeightMap.build_height_map(self.height_at_xy)
+        run_time = time.time() - start_t
+        self.HeightMap.runtime = run_time
+        self.HeightMap.failed = False
+
+        if debug:
+            print("Height map construction done in: ", time.time() - start_t, "s")
+
         return self.HeightMap
 
     def visualize_height_map(self):

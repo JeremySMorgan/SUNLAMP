@@ -79,7 +79,6 @@ class Map:
         pass
 
     def __str__(self):
-
         print_str = "<Map Object>\n"
         print_str += f"   x range: {round(self.x_start, 2)} - {round(self.x_end, 2)}\n"
         print_str += f"   y range: {round(self.y_start, 2)} - {round(self.y_end, 2)}\n"

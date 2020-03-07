@@ -27,17 +27,16 @@ class FootstepCostMapGenerator:
 
         self.fs_slope_cost_arr_obj = None
         self.fs_cumm_err_cost_arr_obj = None
-        self.fs_cost_array_obj = None
 
-        self.fs_cost_array_obj = FootstepCostMap(self.hm_obj.x_vars, self.hm_obj.y_vars)
+        self.fs_costmap = FootstepCostMap(self.hm_obj.x_vars, self.hm_obj.y_vars)
 
     def get_fs_cost_map(self):
-        return self.fs_cost_array_obj
+        return self.fs_costmap
 
-    def normalize_cost_arr(self, debug=False):
-        self.fs_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE, debug=debug)
+    # def normalize_cost_arr(self, debug=False):
+    #     self.fs_costmap.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE, debug=debug)
 
-    def build_costmap(self, debug=False, exlude_slope=False, exlude_roughness=False, exlude_step=False):
+    def build_costmap(self, debug=False, exlude_slope=False, exlude_roughness=False, exlude_step=False, normalize_cost_arr=True):
         '''
             returns runtime
         '''
@@ -207,20 +206,28 @@ class FootstepCostMapGenerator:
                         #     print("cost: ", roughness_cost)
 
                 cost = slope_cost + step_cost + roughness_cost
-                self.fs_cost_array_obj.np_cmap_arr[ x_idx-x_idxs_per_step_on2:x_idx+x_idxs_per_step_on2,
+                self.fs_costmap.np_cmap_arr[x_idx - x_idxs_per_step_on2:x_idx + x_idxs_per_step_on2,
                                                     y_idx-y_idxs_per_step_on2:y_idx+y_idxs_per_step_on2] = cost
                 y_idx += y_idxs_per_step
             y_idx = y_idxs_per_step_on2
             x_idx += x_idxs_per_step
 
-        if debug: print("footstep cost map built in:",time.time()-start_t,"s")
-        return time.time()-start_t
+        if normalize_cost_arr:
+            self.fs_costmap.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE, debug=debug)
+
+        self.fs_costmap.runtime = time.time() - start_t
+        self.fs_costmap.failed = False
+
+        if debug:
+            print("footstep cost map built in:",time.time()-start_t,"s")
+
+        return self.fs_costmap
 
     def round(self, n):
         return np.round(n, decimals=self.decimal_round)
 
     def visualize_cost_array(self):
-        self.fs_cost_array_obj.visualize()
+        self.fs_costmap.visualize()
 
     def return_fs_cost_map(self):
-        return self.fs_cost_array_obj
+        return self.fs_costmap

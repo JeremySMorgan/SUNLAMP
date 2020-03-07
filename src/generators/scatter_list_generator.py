@@ -70,13 +70,14 @@ class ScatterListGenerator:
         if debug:
             print(f"fs scatter built in: {round(time.time() - start_t,2)} seconds with: {len(self.fs_scatter_obj.nb_points())} elements")
 
-        return time.time() - start_t
+        self.fs_scatter_obj.runtime = time.time() - start_t
+        self.fs_scatter_obj.failed = False
+        return self.fs_scatter_obj
+
+        # return time.time() - start_t
 
     def save_list(self,file_name):
         self.fs_scatter_obj.save(file_name)
-
-    def print_list(self):
-        self.fs_scatter_obj.print_scatter()
 
     def return_scatter(self):
         return self.fs_scatter_obj

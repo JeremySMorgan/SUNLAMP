@@ -22,46 +22,12 @@ from src.utils.data_objects.controlloop_output import ControlLoopOutput
 from testing.StepSeqTester import StepSequencePlannerTester
 from src.lidar.pcloud_parser import PCloudParser
 from src.utils.data_objects.height_map import HeightMap
+from src.utils.data_objects.gradient_map import GradientMap
 
 
 class SystemRunner:
 
     robot_file = "data/robot_model/robosimian_caesar_new.rob"
-
-    # hl_traj_timeout = "hl_traj_max_runtime_settings_key"
-    # stepseq_timout = "step_seq_max_runtime_settings_key"
-    # stepseq_debug = "step_seq_vis_enabled_settings_key"
-    # stepseq_vis_successor = "step_seq_vis_successor_enabled_settings_key"
-    # stepseq_vis_detailed = "step_seq_extreme_vis_enabled_settings_key"
-    # hl_traj_debug = "hl_traj_vis_enabled_settings_key"
-    # hl_traj_print_path = "hl_traj_print_path_key"
-    # hl_traj_vis_successor = "hl_traj_vis_succ_enabled_settings_key"
-    # hl_traj_vis_route_on_completion = "hl_traj_vis_rout_enabled_settings_key"
-    # control_loop_debug = "control_loop_debug_enabled_settings_key"
-    # control_loop_visualization_enabled = "cloop_vis"
-    # control_loop_disable_sleep = "control_loop_disable_sleep"
-    # control_loop_auto_disable_sleep_if_no_execution_world = "control_loop_auto_disable_sleep_if_no_execution_world"
-    # control_loop_save_qs = "control_loop_save_qs"
-    #
-    # default_settings = {
-    #
-    #     hl_traj_timeout: 500,
-    #     hl_traj_debug: True,
-    #     hl_traj_print_path: False,
-    #     hl_traj_vis_successor: True,
-    #     hl_traj_vis_route_on_completion: True,
-    #
-    #     stepseq_timout: 750,
-    #     stepseq_debug: 1,
-    #     stepseq_vis_successor: True,    # doesn't affect non visualized planning time
-    #     stepseq_vis_detailed: True,
-    #
-    #     control_loop_debug: 1,
-    #     control_loop_visualization_enabled: True,
-    #     control_loop_disable_sleep: False,
-    #     control_loop_auto_disable_sleep_if_no_execution_world: False,
-    #     control_loop_save_qs: True
-    # }
 
     hm_type = "_hm"
     fs_costmap_type = "_fs_costmap"
@@ -119,8 +85,7 @@ class SystemRunner:
         self.vis_window_id = None
 
     def initialize_sim_world(
-            self,
-            x_inbound_range, y_inbound_range, xy_yaw0, xy_yawf, world_name,
+            self, x_inbound_range, y_inbound_range, xy_yaw0, xy_yawf, world_name,
             execution_world_enabled=True, physics_sim_enabled=False, visualize=True, cloop_run_name=None):
 
         self.HM_X_START = x_inbound_range[0]
@@ -250,18 +215,14 @@ class SystemRunner:
 
         cmap_generator = FootstepCostMapGenerator(self.hm_obj, self.gradient_map_obj)
 
-        fs_cost_map_runtime = cmap_generator.build_costmap(
-            debug=debug, exlude_slope=exlude_slope, exlude_roughness=exlude_roughness, exlude_step=exlude_step
-        )
+        self.fs_cost_map_obj = cmap_generator.build_costmap(
+            debug=debug, exlude_slope=exlude_slope, exlude_roughness=exlude_roughness, exlude_step=exlude_step, normalize_cost_arr=True)
 
-        cmap_generator.normalize_cost_arr(debug = debug)
-        self.fs_cost_map_obj = cmap_generator.return_fs_cost_map()
-
-        Logger.log(f"Built cost map in {Logger.pp_double(fs_cost_map_runtime)} seconds", class_id=0, msg_type=2)
+        Logger.log(f"Built cost map in {Logger.pp_double(self.fs_cost_map_obj.runtime)} seconds", class_id=0, msg_type=2)
         if save:
             print("saving from build_costmap()")
             self.save_obj(SystemRunner.fs_costmap_type, print_saved=print_saved, overwrite=overwrite)
-        return fs_cost_map_runtime
+        return self.fs_cost_map_obj
 
     def build_heightmap(self, save=False, overwrite=True, print_saved = True):
 
@@ -269,23 +230,23 @@ class SystemRunner:
             Logger.log("Warning: height map is already built and loaded", "WARNING")
 
         hm_generator = HeightMapGenerator(self.planning_world, [self.HM_X_START, self.HM_X_END], [self.HM_Y_START, self.HM_Y_END])
-        hm_runtime = hm_generator.build_height_map()
-        self.hm_obj = hm_generator.return_height_map()
-        Logger.log("Built height map in " + str(Logger.pp_double(hm_runtime)) + "s", class_id=0, msg_type=2)
+        self.hm_obj = hm_generator.build_height_map()
+
+        Logger.log(f"Built height map in {Logger.pp_double(self.hm_obj.runtime)} s", class_id=0, msg_type=2)
         if save:
             self.save_obj(SystemRunner.hm_type, print_saved=print_saved, overwrite=overwrite)
-        return hm_runtime
+        return self.hm_obj
 
     def build_gradientmap(self, save=False, overwrite=True, print_saved = True):
 
         if self.gradient_map_obj is not None:
             Logger.log("Warning: gradient map is already built and loaded", "WARNING")
 
-        self.gradient_map_obj, gm_runtime = self.hm_obj.get_gradient_map_obj()
-        Logger.log( "Built gradient map in " + str(Logger.pp_double(gm_runtime)) + "s", class_id=0, msg_type=2)
+        self.gradient_map_obj: GradientMap = self.hm_obj.get_gradient_map_obj()
+        Logger.log("Built gradient map in " + str(Logger.pp_double(self.gradient_map_obj.runtime)) + "s", class_id=0, msg_type=2)
         if save:
             self.save_obj(SystemRunner.gradient_map_type, print_saved=print_saved, overwrite=overwrite)
-        return gm_runtime
+        return self.gradient_map_obj
 
     def build_convcostmap(self, save=False, overwrite=True, print_saved = True):
 
@@ -297,16 +258,15 @@ class SystemRunner:
             return
 
         convmap_gen = ConvolutionCostMapGenerator(self.fs_cost_map_obj)
-        build_t = convmap_gen.build_conv_arr()
-        convmap_gen.normalize_cost_arr()
+        self.fs_convcostmap_obj = convmap_gen.build_conv_arr(normalize=True)
+        # convmap_gen.normalize_cost_arr()
 
         self.fs_convcostmap_obj = convmap_gen.return_cost_arr()
 
-        Logger.log(f"Built conv cost map in {Logger.pp_double(build_t)} s", class_id=0, msg_type=2)
+        Logger.log(f"Built conv cost map in {Logger.pp_double(self.fs_convcostmap_obj.runtime)} s", class_id=0, msg_type=2)
         if save:
             self.save_obj(SystemRunner.fs_convcostmap_type, overwrite=overwrite, print_saved=print_saved)
-
-        return build_t
+        return self.fs_convcostmap_obj
 
     # ___________________________________________________________________ Retreive Objects
 
@@ -435,168 +395,169 @@ class SystemRunner:
             ignore_saved_cloop=False,
             ignore_saved_splan=False):
 
-        # Height map
+
+        # _____________________________________________________________ Height map
         if self.hm_obj is None:
-            self.hm_obj = self.get_saved_object(SystemRunner.hm_type, print_loaded=False, print_dne=False)
+            self.hm_obj: HeightMap = self.get_saved_object(SystemRunner.hm_type, print_loaded=False, print_dne=False)
         if self.hm_obj is None:
-            self.results.hm_runtime = self.build_heightmap()
+            self.build_heightmap()
+            self.results.hm_runtime = self.hm_obj.runtime
         else:
             self.results.hm_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
 
-        # Gradient map
+
+        # _____________________________________________________________ Gradient map
         if self.gradient_map_obj is None:
             self.gradient_map_obj = self.get_saved_object(SystemRunner.gradient_map_type, print_loaded=False, print_dne=False)
         if self.gradient_map_obj is None:
-            self.results.gradient_map_runtime = self.build_gradientmap()
+            self.build_gradientmap()
+            self.results.gradient_map_runtime = self.gradient_map_obj.runtime
         else:
             self.results.gradient_map_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
 
-        # fs Cost Map
+
+        # _____________________________________________________________ ffs Cost Map
         self.results.fs_cost_map_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
         if self.fs_cost_map_obj is None:
             self.fs_cost_map_obj = self.get_saved_object(SystemRunner.fs_costmap_type, print_loaded=False, print_dne=False)
         if self.fs_cost_map_obj is None:
-            self.results.fs_cost_map_runtime = self.build_costmap(exlude_slope=True)
+            self.build_costmap(exlude_slope=True)
+            self.results.fs_cost_map_runtime = self.fs_cost_map_obj.runtime
         else:
             self.results.fs_cost_map_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
-
         cost_map = self.fs_cost_map_obj
 
-        # fs conv. cost Map
+
+        # _____________________________________________________________ fs conv. cost Map
         if project_constants.USE_CONVMAP or conv_override:
             if self.fs_convcostmap_obj is None:
                 self.fs_convcostmap_obj = self.get_saved_object(SystemRunner.fs_convcostmap_type, print_loaded=False, print_dne=False)
             if self.fs_convcostmap_obj is None:
-                self.results.fs_convcost_map_runtime = self.build_convcostmap()
+                self.build_convcostmap()
+                self.results.fs_convcost_map_runtime = self.fs_convcostmap_obj.runtime
             else:
                 self.results.fs_convcost_map_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
 
             if not conv_override:
                 cost_map = self.fs_convcostmap_obj
 
-        if not only_mapping:
+        if only_mapping:
+            if print_results:
+                self.results.print_results()
+            return
 
-            # fs scatter
+        # _____________________________________________________________ fs scatter
+        fs_scatter_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
+        if self.fs_scatter_obj is None:
+            self.fs_scatter_obj = self.get_saved_object(SystemRunner.fs_scatter_type, print_loaded=False, print_dne=False)
             fs_scatter_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
-            if self.fs_scatter_obj is None:
-                self.fs_scatter_obj = self.get_saved_object(SystemRunner.fs_scatter_type, print_loaded=False,
-                                                            print_dne=False)
-                fs_scatter_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
-            if self.fs_scatter_obj is None:
-                Logger.log("Building Footstep Scatter", class_id=0, msg_type=2)
-                scatter_generator = ScatterListGenerator( self.hm_obj, cost_map, self.xy_yaw0)
-                fs_scatter_runtime = scatter_generator.build_list()
-                self.fs_scatter_obj = scatter_generator.return_scatter()
-            self.results.fs_scatter_runtime = fs_scatter_runtime
 
-        if run_hltplanner and not only_mapping:
+        if self.fs_scatter_obj is None:
+            Logger.log("Building Footstep Scatter", class_id=0, msg_type=2)
+            scatter_generator = ScatterListGenerator(self.hm_obj, cost_map, self.xy_yaw0)
+            self.fs_scatter_obj = scatter_generator.build_list()
+            fs_scatter_runtime = self.fs_scatter_obj.runtime
+        self.results.fs_scatter_runtime = fs_scatter_runtime
 
-            # robot poser
-            self.rposer = RobotPoser( self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
+        if not run_hltplanner:
+            if print_results:
+                self.results.print_results()
+            return
 
-            if self.hl_traj_obj is None:
-                self.hl_traj_obj = self.get_saved_object(SystemRunner.hl_traj_type, print_loaded=False, print_dne=False)
 
-            if self.hl_traj_obj is None:
-                Logger.log("Building HL Trajectory", class_id=0, msg_type=2)
-                hl_trajectory_generator = HighLevelTrajectoryPlanner(
-                    self.hm_obj, cost_map, self.xy_yaw0, self.xy_yawf, rposer=self.rposer)
+        # _____________________________________________________________ HL Trajectory
+        self.rposer = RobotPoser(self.planning_world, self.hm_obj, fs_scatter=self.fs_scatter_obj)
 
-                hl_traj_runtime = hl_trajectory_generator.build_trajectory(suspend_after=self.hl_traj_max_runtime)
+        if self.hl_traj_obj is None:
+            self.hl_traj_obj = self.get_saved_object(SystemRunner.hl_traj_type, print_loaded=False, print_dne=False)
+            if self.hl_traj_obj is not None:
+                self.results.hl_traj_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
+
+        if self.hl_traj_obj is None:
+            Logger.log("Building HL Trajectory", class_id=0, msg_type=2)
+            hl_trajectory_generator = HighLevelTrajectoryPlanner(self.hm_obj, cost_map, self.xy_yaw0, self.xy_yawf, rposer=self.rposer)
+            self.hl_traj_obj = hl_trajectory_generator.build_trajectory(suspend_after=self.hl_traj_max_runtime)
+            self.results.hl_traj_runtime = self.hl_traj_obj.runtime
+
+        if self.vis_window_id is not None:
+            if project_constants.HL_TRAJ_VISUALIZE_ROUTE:
+                smoothed_path = self.hl_traj_obj.get_higher_density_xy_yaw_path()
+                VisUtils.visualize_xyz_list(smoothed_path, name="hl traj", height_map=self.hm_obj)
+
+        if self.hl_traj_obj.failed:
+            self.results.hl_traj_runtime = SystemRunnerResults.FAILED
+            if print_results:
+                self.results.print_results()
+            return
+
+        if conv_override:
+            cost_map = self.fs_convcostmap_obj
+
+        if not run_splanner:
+            if print_results:
+                self.results.print_results()
+            return
+
+
+        # _____________________________________________________________ Fs Sequence
+        if self.fs_seq_obj is None:
+            self.fs_seq_obj = self.get_saved_object(SystemRunner.fs_seq_type, print_loaded=False, print_dne=False)
+            if self.fs_seq_obj is not None:
+                self.results.fs_seq_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
+
+        if self.fs_seq_obj is None or ignore_saved_splan:
+            Logger.log("Building FS Sequence", class_id=0, msg_type=2)
+            if self.vis_window_id is not None:
+                fstep_seq_generator = StepSequencePlanner(
+                    self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map, self.xy_yaw0, self.xy_yawf,
+                    vis_successors=project_constants.STEPSEQ_VISUALIZE_SUCCESSOR,
+                    deep_debug_visualization=project_constants.STEPSEQ_VISUALIZE_INDIVIDUAL_FS_PLACEMENT_SEARCH,
+                    r_poser=self.rposer)
             else:
-                hl_traj_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
+                fstep_seq_generator = StepSequencePlanner(self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
+                    self.xy_yaw0, self.xy_yawf,
+                    vis_successors=False, deep_debug_visualization=False, r_poser=None)
 
-            if hl_traj_runtime > 0 or hl_traj_runtime == SystemRunnerResults.LOADED_FROM_PICKLE:
+            self.fs_seq_obj = fstep_seq_generator.build_sequence(suspend_after=self.step_seq_max_runtime)
+            self.results.fs_seq_runtime = self.fs_seq_obj.runtime
 
-                if not hl_traj_runtime == SystemRunnerResults.LOADED_FROM_PICKLE:
-                    hl_trajectory_generator.save_smoothed_path()
-                    hl_trajectory_generator.save_high_density_xy_yaw_path()
-                    self.hl_traj_obj = hl_trajectory_generator.return_trajectory()
-                self.results.hl_traj_runtime = hl_traj_runtime
+        # fs sequence failed
+        if self.fs_seq_obj.failed:
+            self.results.fs_seq_runtime = SystemRunnerResults.FAILED
+            if print_results:
+                self.results.print_results()
+            return
 
-                if self.vis_window_id is not None:
-                    if project_constants.HL_TRAJ_VISUALIZE_ROUTE:
-                        smoothed_path = self.hl_traj_obj.get_higher_density_xy_yaw_path()
-                        VisUtils.visualize_xyz_list(smoothed_path, name="hl traj", height_map=self.hm_obj)
 
-                if conv_override:
-                    cost_map = self.fs_convcostmap_obj
 
-                if run_splanner:
+        # _____________________________________________________________  Motion Planner
+        if run_mplanner:
+            if self.control_loop_output_obj is None and not ignore_saved_cloop:
+                self.control_loop_output_obj = self.get_saved_object(
+                    SystemRunner.control_loop_type, print_loaded=False, print_dne=False)
+                if self.control_loop_output_obj is not None:
+                    self.results.control_loop_output_obj = SystemRunnerResults.LOADED_FROM_PICKLE
 
-                    # fs sequence
-                    if self.fs_seq_obj is None:
-                        self.fs_seq_obj = self.get_saved_object(SystemRunner.fs_seq_type, print_loaded=False, print_dne=False)
+            if self.control_loop_output_obj is None or ignore_saved_cloop:
 
-                    fs_seq_runtime = SystemRunnerResults.LOADED_FROM_PICKLE
+                disable_sleep = True if self.vis_window_id is None else project_constants.CLOOP_ENABLE_SLEEP
+                visualize = self.vis_window_id is not None and project_constants.MPLANNER_VIS_ENABLED
 
-                    if self.fs_seq_obj is None or ignore_saved_splan:
-                        Logger.log("Building FS Sequence", class_id=0, msg_type=2)
-                        if self.vis_window_id is not None:
-                            fstep_seq_generator = StepSequencePlanner(
-                                self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map, self.xy_yaw0, self.xy_yawf,
-                                vis_successors=project_constants.STEPSEQ_VISUALIZE_SUCCESSOR,
-                                deep_debug_visualization=project_constants.STEPSEQ_VISUALIZE_INDIVIDUAL_FS_PLACEMENT_SEARCH,
-                                r_poser=self.rposer)
-                        else:
-                            fstep_seq_generator = StepSequencePlanner(self.hm_obj, self.fs_scatter_obj, self.hl_traj_obj, cost_map,
-                                self.xy_yaw0, self.xy_yawf,
-                                vis_successors=False, deep_debug_visualization=False,
-                                r_poser=None)
-                        fs_seq_runtime = fstep_seq_generator.build_sequence(suspend_after=self.step_seq_max_runtime)
+                self.active_control_loop = ControlLoop(
+                    self.planning_world, self.fs_scatter_obj, self.fs_seq_obj, self.hm_obj, self.gradient_map_obj,
+                    physics_sim_enabled = self.physics_sim_enabled,
+                    execution_world_vis_id= self.execution_world_window_id,
+                    execution_world=self.execution_world,
+                    lidar_mode=lidar_mode,
+                    visualize=visualize,
+                    disable_sleep=disable_sleep,
+                    save_qs=project_constants.CLOOP_SAVE_Qs
+                )
 
-                    # fs sequence failed
-                    if fs_seq_runtime < 0 and not fs_seq_runtime == SystemRunnerResults.LOADED_FROM_PICKLE:
+                Logger.log("Running full body motion planner", class_id=0, msg_type=2)
+                self.control_loop_output_obj = self.active_control_loop.run()
 
-                        self.results.hl_traj_runtime = hl_traj_runtime
-                        self.results.fs_scatter_runtime = fs_scatter_runtime
-                        self.results.fs_seq_runtime = SystemRunnerResults.FAILED
-
-                    # fs seq success
-                    else:
-                        if not fs_seq_runtime == SystemRunnerResults.LOADED_FROM_PICKLE:
-                            self.fs_seq_obj = fstep_seq_generator.return_sequence()
-
-                        self.results.hl_traj_runtime = hl_traj_runtime
-                        self.results.fs_scatter_runtime = fs_scatter_runtime
-                        self.results.fs_seq_runtime = fs_seq_runtime
-
-                        # Run motion planner
-                        if run_mplanner:
-                            if self.control_loop_output_obj is None and not ignore_saved_cloop:
-                                self.control_loop_output_obj = self.get_saved_object(
-                                    SystemRunner.control_loop_type, print_loaded=False, print_dne=False)
-
-                            if self.control_loop_output_obj is None or ignore_saved_cloop:
-
-                                disable_sleep = True if self.vis_window_id is None else project_constants.CLOOP_ENABLE_SLEEP
-                                visualize = self.vis_window_id is not None and project_constants.MPLANNER_VIS_ENABLED
-
-                                self.active_control_loop = ControlLoop(
-                                    self.planning_world, self.fs_scatter_obj, self.fs_seq_obj, self.hm_obj, self.gradient_map_obj,
-                                    physics_sim_enabled = self.physics_sim_enabled,
-                                    execution_world_vis_id= self.execution_world_window_id,
-                                    execution_world=self.execution_world,
-                                    lidar_mode=lidar_mode,
-                                    visualize=visualize,
-                                    disable_sleep=disable_sleep,
-                                    save_qs=project_constants.CLOOP_SAVE_Qs
-                                )
-
-                                Logger.log("Running full body motion planner", class_id=0, msg_type=2)
-                                self.control_loop_output_obj = self.active_control_loop.run()
-
-                                self.results.control_loop_output_obj = self.control_loop_output_obj
-                else:
-                    self.results.hl_traj_runtime = hl_traj_runtime
-
-            # Hl trajectory failed
-            else:
-                self.results.hl_traj_runtime = SystemRunnerResults.FAILED
-
-        # dont test planners
-        else:
-            pass
+                self.results.control_loop_output_obj = self.control_loop_output_obj
 
         if print_results:
             self.results.print_results()
@@ -607,8 +568,34 @@ class SystemRunner:
     # __________________________________________________________________________________________________________________
     #  Get stats
 
-    def print_cloop_output_stats(self):
+    def print_stats(self):
 
+        if self.hm_obj:
+            self.hm_obj.print_stats()
+        else: print("<HeightMap>: None")
+
+        if self.fs_cost_map_obj:
+            self.fs_cost_map_obj.print_stats()
+        else: print("<CostMap>: None")
+
+        if self.fs_scatter_obj:
+            self.fs_scatter_obj.print_stats()
+        else: print("<ScatterList>: None")
+
+        if self.hl_traj_obj:
+            self.hl_traj_obj.print_stats()
+        else:  print("<HLTraj>: None")
+
+        if self.fs_seq_obj:
+            self.fs_seq_obj.print_stats()
+        else: print("<FsSeq>: None")
+
+        if self.control_loop_output_obj:
+            self.control_loop_output_obj.print_stats()
+        else:  print("<CLoopObj>: None")
+
+
+    def print_cloop_output_stats(self):
         self.control_loop_output_obj: ControlLoopOutput = self.get_saved_object(SystemRunner.control_loop_type)
         self.control_loop_output_obj.print_stats()
 

@@ -1,11 +1,14 @@
 import pickle as pickle
 import time as picklerick
 from src.utils.vis_utils import VisUtils
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class FootstepSequence:
+class FootstepSequence(OutputSuperclass):
 
     def __init__(self):
+
+        OutputSuperclass.__init__(self, "footstep sequence")
         self.xy_yaw0 = None
         self.xy_yawf = None
         self.state_path = None
@@ -38,6 +41,9 @@ class FootstepSequence:
     def get_state_path(self):
         return self.state_path
 
-    def save(self,save_file,print_=True):
-        pickle.dump(self, open(save_file+".pickle", "wb"))
-        if print_:print("footstep sequence saved")
+    def print_stats(self):
+        print("<FS_Sequence Obj>")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime, 2)}")
+        print(f"      nb states:\t\t{len(self.state_path)}")
+        print()

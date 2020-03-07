@@ -100,6 +100,11 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         return self.state_path
 
     def build_sequence(self, print_seq=False, suspend_after=None):
+
+        fs_sequence = FootstepSequence()
+        fs_sequence.xy_yaw0 = self.xy_yaw0
+        fs_sequence.xy_yawf = self.xy_yawf
+
         if project_constants.STEPSEQ_VERBOSITY >= 2:
             print("Starting step sequence search")
 
@@ -128,28 +133,26 @@ class StepSequencePlanner(GeneratorSuperclass, AStar):
         path = self.result_path()
         if res:
             if project_constants.STEPSEQ_VERBOSITY >= 2:
-                print(f"A* step sequence search finished in: {round(time.time() - t_start, 2)} seconds, with {len(path)} states")
+                print(f"Step sequence search finished in: {round(time.time() - t_start, 2)} seconds, with {len(path)} states")
+            fs_sequence.failed = False
         else:
             if project_constants.STEPSEQ_VERBOSITY >= 1:
-                Logger.log(f"A* step sequence search failed after: {round(time.time() - t_start, 2)} seconds", "")
+                Logger.log(f"Step sequence search failed after: {round(time.time() - t_start, 2)} seconds", "")
+            fs_sequence.failed = True
+
         state_path = []
         for node in path:
             state_path.append(node.state)
             if print_seq: print(node.state,"cost:",node.f)
         state_path = state_path[:-1]
         self.state_path = state_path
-        return time.time() - t_start
 
-    def return_sequence(self):
-        fs_sequence = FootstepSequence()
         fs_sequence.state_path = self.state_path
-        fs_sequence.xy_yaw0 = self.xy_yaw0
-        fs_sequence.xy_yawf = self.xy_yawf
+        fs_sequence.runtime = time.time() - t_start
+
         return fs_sequence
 
-    def save_sequence(self, save_file):
-        fs_sequence = self.return_sequence()
-        fs_sequence.save(save_file)
+
 
     # -------- A* Functions
     def is_goal(self, state, debug=False):

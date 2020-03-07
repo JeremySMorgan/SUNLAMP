@@ -2,11 +2,14 @@ import pickle as pickle
 import numpy as np
 from klampt.model import trajectory
 from src.utils.logger import Logger
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class FootstepScatter:
+class FootstepScatter(OutputSuperclass):
 
     def __init__(self):
+
+        OutputSuperclass.__init__(self, "footstep scatter")
 
         self.scatter = []
         self.idx_tree = {}
@@ -130,19 +133,11 @@ class FootstepScatter:
     def get_scatter_tree(self):
         return self.idx_tree
 
-    def print_scatter(self, only_bounds=True):
+    def print_stats(self):
         print("<FS_Scatter Obj>")
-        print(f"   min_x: {round(self.min_x, 2)}")
-        print(f"   max_x: {round(self.max_x, 2)}")
-        print(f"   min_y: {round(self.min_y, 2)}")
-        print(f"   max_y: {round(self.max_y, 2)}\n")
-
-        if not only_bounds:
-            for i in range(len(self.scatter)):
-                print("  ", i, ": ", Logger.pp_list(self.scatter[i]) )
-                # print("  ", i, ": ", np.round(self.scatter[i],2))
-
-    def save(self, save_file, print_=True):
-        pickle.dump(self, open(save_file+".pickle", "wb"))
-        if print_:
-            print("footstep scatter saved")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime,2)}")
+        print(f"      min_x:\t\t{round(self.min_x, 2)}")
+        print(f"      max_x:\t\t{round(self.max_x, 2)}")
+        print(f"      min_y:\t\t{round(self.min_y, 2)}")
+        print(f"      max_y:\t\t{round(self.max_y, 2)}\n")

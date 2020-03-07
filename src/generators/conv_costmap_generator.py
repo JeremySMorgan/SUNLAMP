@@ -25,7 +25,7 @@ class ConvolutionCostMapGenerator:
         # self.conv_cost_array_obj = ConvolutionCostMap(self.fs_cost_map_obj.x_vars, self.fs_cost_map_obj.y_vars)
         self.conv_cost_array_obj = FootstepCostMap(self.fs_cost_map_obj.x_vars, self.fs_cost_map_obj.y_vars)
 
-    def build_conv_arr(self, method="min"):
+    def build_conv_arr(self, method="min", normalize=True):
 
         print("calculating "+method+" conv fs costs")
         start_t = time.time()
@@ -127,13 +127,18 @@ class ConvolutionCostMapGenerator:
                 # np_minconv_arr.itemset((x_idx, y_idx), val)
 
         # print "Min conv footstep cost map built in:",time.time()-start_t,"s"
-        return time.time() - start_t
+
+        if normalize:
+            self.conv_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE)
+        self.conv_cost_array_obj.runtime = time.time() - start_t
+        self.conv_cost_array_obj.failed = False
+        return self.conv_cost_array_obj
 
     def return_cost_arr(self):
         return self.conv_cost_array_obj
 
-    def normalize_cost_arr(self):
-        self.conv_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE)
+    # def normalize_cost_arr(self):
+    #     self.conv_cost_array_obj.normalize_cost_arr(project_constants.CMAP_NORMALIZED_MAX_VALUE)
 
     def get_xy_start_finals(self, x, y, xradius, yradius):
         x_0 = x - xradius

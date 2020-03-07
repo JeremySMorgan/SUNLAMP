@@ -4,13 +4,16 @@ import numpy as np
 from matplotlib import cm
 from .map_superclass import Map
 from src.utils.math_utils import MathUtils
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class GradientMap(Map):
+class GradientMap(Map, OutputSuperclass):
 
     def __init__(self, height_map_obj):
 
-        super(self.__class__, self).__init__()
+        # super(self.__class__, self).__init__()
+        Map.__init__(self)
+        OutputSuperclass.__init__(self, "gradient map")
 
         self.x_vars = height_map_obj.x_vars
         self.y_vars = height_map_obj.y_vars
@@ -94,16 +97,10 @@ class GradientMap(Map):
 
         plt.show()
 
-    def save(self, save_file, print_ = True):
-
-        '''
-                - Saves the height map to a numpy file and this object to a .pickle file
-        :param save_file:
-        :return: None
-        '''
-
-        #np.save((save_file+"_x_direction"), self.hm_x_gradient)
-        #np.save((save_file+"_y_ydirection"), self.hm_y_gradient)
-        pickle.dump(self, open(save_file+".pickle", "wb"))
-        if print_:
-            print("gradient map saved")
+    def print_stats(self):
+        print("<GradMap Obj>")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime,2)}")
+        print(f"      x range:\t\t{round(self.x_start, 2)} - {round(self.x_end, 2)}")
+        print(f"      y range:\t\t{round(self.y_start, 2)} - {round(self.y_end, 2)}")
+        print(f"      np array size:\t[{self.x_indices} {self.y_indices}]\n")

@@ -7,13 +7,16 @@ from .gradient_map import GradientMap
 from .map_superclass import Map
 from klampt import vis
 from klampt.model import trajectory
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class HeightMap(Map):
+class HeightMap(Map, OutputSuperclass):
 
     def __init__(self, x_vars, y_vars):
 
-        super(self.__class__, self).__init__()
+        # super(self.__class__, self).__init__()
+        Map.__init__(self)
+        OutputSuperclass.__init__(self, "height map")
 
         self.x_vars = x_vars
         self.y_vars = y_vars
@@ -38,7 +41,9 @@ class HeightMap(Map):
         '''
         t_start = time.time()
         gm = GradientMap(self)
-        return gm, time.time() - t_start
+        gm.runtime = time.time() - t_start
+        gm.failed = False
+        return gm
 
     def get_np_hm_array(self):
         return self.np_arr
@@ -56,7 +61,6 @@ class HeightMap(Map):
 
     def build_height_map(self, height_at_xy_func, debug=False):
 
-        start_t = time.time()
         world_x = self.x_start
         world_y = self.y_start
 
@@ -69,10 +73,6 @@ class HeightMap(Map):
                 world_y += self.y_granularity
 
             world_x += self.x_granularity
-
-        run_time = time.time() - start_t
-        if debug: print("Height map construction done in: ", time.time() - start_t, "s")
-        return run_time
 
     def visualize(self):
 
@@ -96,7 +96,6 @@ class HeightMap(Map):
 
     def visualize_in_klampt(self, step=5, xmin=4, xmax=12, ymin=8, ymax=12):
 
-
         for x_inx in range(self.get_xindex_from_x(xmin), self.get_xindex_from_x(xmax), step):
             for y_inx in range(self.get_yindex_from_y(ymin), self.get_yindex_from_y(ymax), step):
 
@@ -109,14 +108,10 @@ class HeightMap(Map):
                     vis.add(name, traj)
                     vis.hideLabel(name)
 
-    def save(self, save_file, print_=True):
-
-        '''
-                - Saves the height map to a numpy file and this object to a .pickle file
-        :param save_file:
-        :return: None
-        '''
-
-        pickle.dump(self, open(save_file+".pickle", "wb"), -1)
-        if print_:
-            print("height map saved")
+    def print_stats(self):
+        print("<HeightMap Obj>")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime, 2)}")
+        print(f"      x range:\t\t{round(self.x_start, 2)} - {round(self.x_end, 2)}")
+        print(f"      y range:\t\t{round(self.y_start, 2)} - {round(self.y_end, 2)}")
+        print(f"      np array size:\t[{self.x_indices} {self.y_indices}]\n")

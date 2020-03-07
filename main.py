@@ -2,7 +2,6 @@ import sys
 import time
 import os
 from klampt import vis
-from scripts.world_builder import WorldBuilder
 from src.system_runner import SystemRunner
 from src.utils.logger import Logger
 from src.lidar.pcloud_parser import PCloudParser
@@ -13,6 +12,7 @@ from src.utils.data_objects.system_runner_results import SystemRunnerResults
 def main():
 
     # TODO: decrease step distance
+    # done: Save meta data about building - how long, success, failure saved.
 
     print('\nConfig options:\n')
     for v in dir(project_constants):
@@ -39,10 +39,11 @@ def main():
 
     srunner = SystemRunner()
     srunner.initialize_sim_world(
-        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
-        visualize=visualize, cloop_run_name=cloop_run_name)
+        x_range, y_range, robot_q0, robot_qf, world_name,
+        execution_world_enabled=execution_world_enabled, visualize=visualize, cloop_run_name=cloop_run_name)
     srunner.run()
     srunner.save_all()
+    srunner.print_stats()
 
 
     x_range = [4.5, 18.25]
@@ -50,27 +51,31 @@ def main():
     robot_q0 = [5.75, 1.1, 0]
     robot_qf = [17.25, 1, 0]
     world_name = "drc_rough_terrain_world"
-
     srunner = SystemRunner()
     srunner.initialize_sim_world(
-        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
-        visualize=visualize, cloop_run_name=cloop_run_name)
+        x_range, y_range, robot_q0, robot_qf, world_name,
+        execution_world_enabled=execution_world_enabled, visualize=visualize, cloop_run_name=cloop_run_name)
     srunner.run()
     srunner.save_all()
+    srunner.print_stats()
+
 
 
     x_range = [-5, 5, .015]
     y_range = [-.25, 3, .015]
     robot_q0 = [-4.25, 1, 0]
-    robot_qf = [-2.75, 1, 0]
+    robot_qf = [3.5, 1, 0]
     world_name = "flatworld"
 
     srunner = SystemRunner()
     srunner.initialize_sim_world(
-        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
-        visualize=visualize, cloop_run_name=cloop_run_name)
+        x_range, y_range, robot_q0, robot_qf, world_name,
+        execution_world_enabled=execution_world_enabled, visualize=visualize, cloop_run_name=cloop_run_name)
     srunner.run()
     srunner.save_all()
+    srunner.print_stats()
+
+
 
 
     world_name = "very_hectic_world"
@@ -78,33 +83,16 @@ def main():
     y_range = [-2.25, 2.25, .015]
     robot_q0 = [-4, 0, 0]
     robot_qf = [4, .5, 0]
-
     srunner = SystemRunner()
     srunner.initialize_sim_world(
-        x_range, y_range, robot_q0, robot_qf, world_name, execution_world_enabled=execution_world_enabled,
-        visualize=visualize, cloop_run_name=cloop_run_name)
+        x_range, y_range, robot_q0, robot_qf, world_name,
+        execution_world_enabled=execution_world_enabled, visualize=visualize, cloop_run_name=cloop_run_name)
     srunner.run()
     srunner.save_all()
+    srunner.print_stats()
 
 
 
-    # srunner.visualize()
-
-    # srunner.run(ignore_saved_cloop=True)
-    # srunner.run(run_mplanner=False)
-    # srunner.run(run_mplanner=False)
-    # srunner.run(ignore_saved_splan=True)
-    # srunner.run(only_mapping=True)
-    # srunner.run()
-    # srunner.save_all()
-    # srunner.visualize(visualize_stepseq=False, visualize_hltraj=False, skip_to_pct_through_cloop_output=0)
-    # srunner.visualize_cmap_in_klampt_vis(step=7)
-
-
-
-
-
-    # ___________________ Run Lidar Generated World
 
 
     shutdown()
@@ -135,6 +123,7 @@ def run_lidar_world():
 
 
 def buid_new_world():
+    from scripts.world_builder import WorldBuilder
 
     world_name = "very_hectic_world"
     x_range = [-5, 5, .015]

@@ -10,6 +10,7 @@ from src.generators.generator_superclass import GeneratorSuperclass
 from src.utils.math_utils import MathUtils
 from src.utils import project_constants
 
+
 class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
     '''State = (x, y, yaw, (x_prev, y_prev, yaw_prev), (x_2ndprev, y_2ndprev, yaw_2ndprev))
@@ -89,10 +90,14 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         if project_constants.STEPSEQ_VERBOSITY >= 3:
             print("g weight:",Logger.pp_double(self.g_weight),", h_weight:",Logger.pp_double(self.h_weight))
 
-    def build_trajectory(self, suspend_after=None):
+    def build_trajectory(self, suspend_after=None, save_high_density_xy_yaw_path=True, save_smoothed_path=True):
         '''
             returns runtime, -1 if doesn't complete after suspend_after seconds, -2 if inbounds error
         '''
+
+        hl_traj = HLTrajectory()
+        hl_traj.xy_yaw0 = self.xy_yaw0[:]
+        hl_traj.xy_yawf = self.xy_yawf[:]
 
         if self.inbounds_error:
             Logger.log("Error: robot xy yaw_f is out of bounds", "FAIL", class_id=1, msg_type=1)
@@ -100,7 +105,7 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
 
         t_start = time.time()
         if project_constants.STEPSEQ_VERBOSITY >= 2:
-            print("Starting high level trajectory A* search")
+            print("Starting high level trajectory search")
 
         if suspend_after:
 
@@ -136,7 +141,21 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         for xy_yaw in state_path:
             self.xy_yaw_path.append([xy_yaw[0], xy_yaw[1], xy_yaw[2]])
 
-        return time.time() - t_start
+        if save_smoothed_path:
+            self.save_smoothed_path()
+
+        if save_high_density_xy_yaw_path:
+            self.save_high_density_xy_yaw_path()
+
+        # Save results
+        hl_traj.xy_yaw_path = self.xy_yaw_path[:]
+        hl_traj.higher_density_xy_yaw_path = self.higher_density_xy_yaw_path[:]
+        hl_traj.ave_higher_density_xy_yaw_path_distance_change = self.ave_higher_density_xy_yaw_path_distance_change
+        hl_traj.ave_smooth_path_distance_change = self.ave_smooth_path_distance_change
+        hl_traj.failed = False
+        hl_traj.runtime = time.time() - t_start
+
+        return hl_traj
 
     def return_trajectory(self):
         hl_traj = HLTrajectory()
@@ -148,13 +167,6 @@ class HighLevelTrajectoryPlanner(GeneratorSuperclass, AStar):
         # hl_traj.smoothed_path = self.smoothed_path[:]
         hl_traj.ave_smooth_path_distance_change = self.ave_smooth_path_distance_change
         return hl_traj
-
-    def save_trajectory(self, save_file):
-        hl_traj = self.return_trajectory()
-        hl_traj.save(save_file)
-
-    def get_smoothed_xy_yaw_path(self):
-        return self.smoothed_path
 
     def save_high_density_xy_yaw_path(self):
         num_to_add_between_points = project_constants.HLTRAJ_NB_POINTS_BTWN_PATH_NODES

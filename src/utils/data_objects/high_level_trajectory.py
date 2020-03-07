@@ -1,9 +1,11 @@
-import pickle as pickle
+from src.utils.data_objects.output_superclass import OutputSuperclass
 
 
-class HLTrajectory:
+class HLTrajectory(OutputSuperclass):
 
     def __init__(self):
+
+        OutputSuperclass.__init__(self, "control loop output")
 
         self.xy_yaw0 = None
         self.xy_yawf = None
@@ -31,6 +33,9 @@ class HLTrajectory:
     def get_smoothed_xy_yaw_path(self):
         return self.smoothed_path
 
-    def save(self,save_file,print_=True):
-        pickle.dump(self, open(save_file+".pickle", "wb"))
-        if print_: print("hl trajectory saved")
+    def print_stats(self):
+        print("<HL_Trajectory Obj>")
+        print(f"      failed:\t\t{self.failed}")
+        print(f"      runtime:\t\t{round(self.runtime, 2)}")
+        print(f"      len path:\t\t{len(self.xy_yaw_path)}")
+        print()

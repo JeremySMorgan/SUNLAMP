@@ -156,6 +156,12 @@ class ControlLoop(MotionUtils):
         if project_constants.CLOOP_VERBOSITY >= 2:
             print(f"Starting control loop. {len(self.stance_path)} total states")
 
+        output_obj = ControlLoopOutput()
+        xy_yaw_rads0 = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[0])
+        xy_yaw_radsf = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[len(self.stance_path) - 1])
+        output_obj.dist_from_start_to_end = MathUtils._2d_euclidian_distance(xy_yaw_rads0, xy_yaw_radsf)
+        output_obj.nb_stances = len(self.stance_path)
+
         while 1:
 
             if self.u_input:
@@ -187,9 +193,6 @@ class ControlLoop(MotionUtils):
                         Logger.log("Control loop error", "FAIL")
 
                     current_torso_xyz = self.get_current_torso_xyz_yaw_deg()
-                    xy_yaw_rads0 = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[0])
-                    xy_yaw_radsf = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[len(self.stance_path) - 1])
-                    output_obj = ControlLoopOutput()
                     output_obj.configs = self.configurations[:]
                     output_obj.end_stance_idx = self.curr_stance_idx
                     output_obj.failed = True
@@ -203,14 +206,10 @@ class ControlLoop(MotionUtils):
                         Logger.log("Done", "OKGREEN")
 
                     current_torso_xyz = self.get_current_torso_xyz_yaw_deg()
-                    xy_yaw_rads0 = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[0])
-                    xy_yaw_radsf = self.estimate_torso_xy_yaw_rads_from_stance(self.stance_path[len(self.stance_path) - 1])
-                    output_obj = ControlLoopOutput()
                     output_obj.configs = self.configurations[:]
                     output_obj.end_stance_idx = self.curr_stance_idx
                     output_obj.failed = False
                     output_obj.dist_to_end = MathUtils._2d_euclidian_distance(current_torso_xyz, xy_yaw_radsf)
-                    output_obj.dist_from_start_to_end = MathUtils._2d_euclidian_distance(xy_yaw_rads0, xy_yaw_radsf)
                     output_obj.runtime = time.time()-t_start
                     return output_obj
 
