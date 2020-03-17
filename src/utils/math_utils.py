@@ -149,11 +149,11 @@ class MathUtils:
     def mid_motion_rotation_matrix(R0, Rf, i, i_max):
 
         if not so3.is_rotation(R0):
-            Lg.log("R0 is not a rotation", "FAIL")
+#             Lg.log("R0 is not a rotation", "FAIL")
             return
 
         if not so3.is_rotation(Rf):
-            Lg.log("Rf is not a rotation", "FAIL")
+#             Lg.log("Rf is not a rotation", "FAIL")
             return
 
         h = float(i) / float(i_max)
